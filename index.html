@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DCS Planungstool - Milestone 3</title>
+  <style>
+    body, html { margin:0; padding:0; height:100%; background:#1e1e2e; color:#d4d4d4; font-family:sans-serif; overflow:hidden; }
+    .top-bar { position:fixed; top:0; left:0; right:0; height:44px; background:#252525; display:flex; align-items:center; padding:0 15px; z-index:100; }
+    .top-bar label, .top-bar input, .top-bar select, .top-bar button { margin-right:8px; font-size:0.9em; color:#d4d4d4; }
+    .top-bar input, .top-bar select { background:#2a2a2a; border:1px solid #333; border-radius:2px; padding:4px 8px; }
+    .top-bar button { background:#444; border:1px solid #333; border-radius:2px; padding:4px 8px; cursor:pointer; }
+    .top-bar-right { margin-left:auto; display:flex; align-items:center; }
+    #status-msg { margin-left:8px; font-size:0.9em; }
+    .left-panel { position:fixed; top:44px; left:0; right:0; display:flex; background:#252525; padding:4px; z-index:99; }
+    .left-panel button { flex:1; background:#333; border:none; margin-right:4px; padding:6px; color:#d4d4d4; cursor:pointer; }
+    .left-panel button:last-child { margin-right:0; }
+    .left-panel button.active { background:#007acc; color:#fff; }
+    .container { position:absolute; top:96px; bottom:0; left:0; right:0; overflow:auto; }
+    .map-area { position:relative; user-select:none; padding:16px; }
+    .map-drop { display:none; position:absolute; top:0; left:8px; right:0; height:95px; border:2px dashed #777; color:#777; align-items:center; justify-content:center; }
+    body.editor-mode .map-drop { display:flex; }
+    .editor-mode-button { position:fixed; bottom:15px; left:15px; background:#007acc; border:1px solid #005a9e; padding:6px 12px; color:#fff; cursor:pointer; z-index:200; }
+    body.editor-mode .editor-mode-button { background:#e74c3c; }
+    #editor-mode-info { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); height:44px; line-height:44px; background:#e74c3c; padding:0 12px; color:#fff; font-weight:bold; z-index:200; }
+    body.editor-mode #editor-mode-info { display:block; }
+    .floating-window { position:absolute; width:533px; height:400px; background:#2a2a2a; border:1px solid #333; box-shadow:2px 2px 5px rgba(0,0,0,0.4); border-radius:4px; display:flex; flex-direction:column; z-index:150; resize:both; overflow:auto; }
+    .window-taskbar { background:#333; padding:6px 10px; display:flex; align-items:center; cursor:grab; }
+    .window-taskbar span { flex:1; color:#fff; }
+    .window-taskbar button { background:#555; border:none; color:#fff; padding:2px 6px; cursor:pointer; }
+    .window-tabs { display:flex; gap:4px; background:#2b2b2b; padding:4px; }
+    .window-tab { background:#333; color:#d4d4d4; padding:4px 8px; border-radius:3px; cursor:move; position:relative; }
+    .window-tab.active { background:#007acc; color:#fff; }
+    .window-tab input { background:transparent; border:none; color:inherit; outline:none; width:auto; }
+    .window-tab .tab-close { position:absolute; top:2px; right:2px; background:transparent; border:none; color:#ccc; cursor:pointer; }
+    .add-tab { display:none; }
+    body.editor-mode .add-tab { display:flex; align-items:center; justify-content:center; padding:4px 8px; background:#555; border-radius:3px; color:#fff; cursor:pointer; margin-left:4px; }
+    .editor-toolbar { display:none; gap:6px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; margin:4px; }
+    body.editor-mode .editor-toolbar { display:flex; }
+    .editor-toolbar button { background:transparent; border:none; color:#d4d4d4; padding:4px 6px; cursor:pointer; }
+    .page { flex:1; background:#1e1e2e; padding:10px; position:relative; overflow:auto; }
+    .page-content { width:100%; height:100%; padding:4px; box-sizing:border-box; background:transparent; color:#d4d4d4; outline:none; }
+    .page[data-drop-zone]::before { content:"+ Bild hierher ziehen"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border:2px dashed #777; padding:10px; border-radius:5px; color:#777; display:none; }
+    body.editor-mode .page[data-drop-zone]::before { display:block; }
+    .img-controls { position:absolute; top:6px; right:6px; display:flex; gap:4px; }
+    .img-controls button { background:rgba(0,0,0,0.5); border:none; color:#fff; padding:2px 6px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <label for="mission-name">OPERATION:</label>
+    <input id="mission-name" type="text" placeholder="Missionsname" readonly />
+    <label for="map-select">Map:</label>
+    <select id="map-select"></select>
+    <span id="map-display"></span>
+    <div class="top-bar-right">
+      <label for="takeoff-date">Mission Start:</label>
+      <input id="takeoff-date" type="date" disabled />
+      <input id="takeoff-time" type="time" disabled />
+      <button id="save-btn">Save</button>
+      <button id="load-btn">Load</button>
+      <input id="load-input" type="file" accept="application/json" style="display:none" />
+      <span id="status-msg"></span>
+    </div>
+  </div>
+  <div id="editor-mode-info">Editor Mode</div>
+  <div class="left-panel">
+    <button data-window="threats">Threats</button>
+    <button data-window="situation">Situation</button>
+    <button data-window="mission">Mission</button>
+    <button data-window="package">Package</button>
+    <button data-window="flightplan">Flightplan</button>
+    <button data-window="agencies">Agencies</button>
+    <button data-window="charts">Charts</button>
+    <button data-window="commladder">Comm Ladder</button>
+  </div>
+  <div class="container">
+    <div class="map-area">
+      <div class="map-drop">+ Bild hierher ziehen</div>
+    </div>
+  </div>
+  <button id="editor-mode-button" class="editor-mode-button">Editor Mode</button>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const D = String(now.getDate()).padStart(2,'0'), H = String(now.getHours()).padStart(2,'0'), M = String(now.getMinutes()).padStart(2,'0');
+      const STORAGE_KEY = `dcs-plan_${D}-${H}-${M}`;
+      let state = { windows: {}, mapImages: [] };
+      const saveBtn      = document.getElementById('save-btn');
+      const loadBtn      = document.getElementById('load-btn');
+      const loadInput    = document.getElementById('load-input');
+      const statusMsg    = document.getElementById('status-msg');
+      const editorBtn    = document.getElementById('editor-mode-button');
+      const mapDrop      = document.querySelector('.map-drop');
+      const missionInput = document.getElementById('mission-name');
+      const mapSelect    = document.getElementById('map-select');
+      const mapDisplay   = document.getElementById('map-display');
+      const dateInput    = document.getElementById('takeoff-date');
+      const timeInput    = document.getElementById('takeoff-time');
+      const buttons      = document.querySelectorAll('.left-panel button');
+      let openWindows = {};
+      let editorMode = false;
+      function formatTimestamp(d){const DD=String(d.getDate()).padStart(2,'0'),HH=String(d.getHours()).padStart(2,'0'),MM=String(d.getMinutes()).padStart(2,'0'),SS=String(d.getSeconds()).padStart(2,'0');return`${DD} ${HH}:${MM}:${SS}`;}
+      editorBtn.addEventListener('click',()=>{editorMode=!editorMode;document.body.classList.toggle('editor-mode',editorMode);document.querySelectorAll('.page-content').forEach(div=>div.contentEditable=editorMode);missionInput.readOnly=!editorMode;mapSelect.style.display=editorMode?'':'none';mapDisplay.style.display=editorMode?'':'none';dateInput.disabled=!editorMode;timeInput.disabled=!editorMode;});
+      ['Caucasus','Afghanistan','Persian Gulf','Iraq','Syria','Kola','Europe','NTTR','South Pacific'].forEach(m=>{const opt=document.createElement('option');opt.value=m;opt.textContent=m;mapSelect.appendChild(opt);});mapDisplay.textContent=mapSelect.options[0].value;mapSelect.style.display='none';mapSelect.addEventListener('change',()=>mapDisplay.textContent=mapSelect.value);
+      mapDrop.addEventListener('dragover',e=>{if(editorMode) e.preventDefault();});mapDrop.addEventListener('drop',e=>{e.preventDefault();if(!editorMode)return;handleDrop(e,document.querySelector('.map-area'),null);});
+      saveBtn.addEventListener('click',()=>{const data=JSON.stringify(state,null,2),blob=new Blob([data],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${STORAGE_KEY}.json`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);statusMsg.textContent=`Saved ${formatTimestamp(new Date())}`;});
+      loadBtn.addEventListener('click',()=>loadInput.click());loadInput.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{state=JSON.parse(ev.target.result);statusMsg.textContent='Loaded';clearWindows();rebuildWindows();state.mapImages.forEach(img=>{const{wrapper}=createImageElement(img,document.querySelector('.map-area'),null);document.querySelector('.map-area').appendChild(wrapper);});}catch(err){console.error(err);statusMsg.textContent='Error loading JSON';}};r.readAsText(f);});
+      buttons.forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.window;if(openWindows[key]){const w=openWindows[key];w.style.display=w.style.display==='none'?'':'none';btn.classList.toggle('active');}else{const w=createWindow(key,btn.textContent,btn);document.body.appendChild(w);openWindows[key]=w;btn.classList.add('active');}}));
+      function clearWindows(){Object.values(openWindows).forEach(w=>w.remove());openWindows={};buttons.forEach(b=>b.classList.remove('active'));}
+      function rebuildWindows(){Object.entries(state.windows).forEach(([id,cfg])=>{const btn=document.querySelector(`[data-window="${id}"]`);const w=createWindow(id,cfg.title,btn,cfg);document.body.appendChild(w);openWindows[id]=w;btn.classList.add('active');});}
+      function createWindow(id,title,srcBtn,cfg){const idx=Object.keys(openWindows).length,defaultX=50+idx*20,defaultY=60+idx*20;const winCfg=cfg||{title,tabs:[{label:title,content:'',images:[]}],active:0,x:defaultX,y:defaultY};state.windows[id]=winCfg;const win=document.createElement('div');win.className='floating-window';win.style.left=winCfg.x+'px';win.style.top=winCfg.y+'px';const bar=document.createElement('div');bar.className='window-taskbar';const lbl=document.createElement('span');lbl.textContent=winCfg.title;const cb=document.createElement('button');cb.textContent='×';cb.onclick=()=>{win.style.display='none';srcBtn.classList.remove('active');};bar.append(lbl,cb);win.append(bar);const tabsEl=document.createElement('div');tabsEl.className='window-tabs';const addEl=document.createElement('div');addEl.className='add-tab';addEl.textContent='+';addEl.onclick=()=>{if(editorMode)addPage();};tabsEl.append(addEl);win.append(tabsEl);const toolbar=document.createElement('div');toolbar.className='editor-toolbar';toolbar.innerHTML='<button data-cmd="bold"><b>B</b></button><button data-cmd="increase">A+</button><button data-cmd="decrease">A-</button>';toolbar.querySelectorAll('button').forEach(b=>{b.onmousedown=e=>{e.preventDefault();const cmd=b.getAttribute('data-cmd');document.execCommand(cmd==='bold'?'bold':'fontSize',false,cmd==='increase'?'5':'3');};});win.append(toolbar);
+      const pages=[];let current=winCfg.active;function createPage(tab){const page=document.createElement('div');page.className='page';page.setAttribute('data-drop-zone','true');page.style.display='none';const div=document.createElement('div');div.className='page-content';div.innerHTML=tab.content;div.oninput=()=>{tab.content=div.innerHTML;saveState();};div.contentEditable=editorMode;page.append(div);tab.images.forEach(img=>{const{wrapper}=createImageElement(img,page,tab);page.append(wrapper);});page.ondragover=e=>{if(editorMode)e.preventDefault();};page.ondrop=e=>{if(editorMode)handleDrop(e,page,tab);};win.append(page);return{page,div};}function renderTabs(){tabsEl.querySelectorAll('.window-tab').forEach(n=>n.remove());winCfg.tabs.forEach((t,i)=>{const te=document.createElement('div');te.className='window-tab';te.draggable=true;const inp=document.createElement('input');inp.value=t.label;inp.readOnly=!editorMode;inp.oninput=e=>{t.label=inp.value;saveState();};const close=document.createElement('button');close.className='tab-close';close.textContent='×';close.onclick=e=>{e.stopPropagation();winCfg.tabs.splice(i,1);pages.splice(i,1);if(current===i)current=0;saveState();renderTabs();switchPage(current);};te.append(inp,close);te.ondragstart=e=>e.dataTransfer.setData('tab-index',i);te.ondragover=e=>e.preventDefault();te.ondrop=e=>{e.preventDefault();const from=+e.dataTransfer.getData('tab-index');winCfg.tabs.splice(i,0,winCfg.tabs.splice(from,1)[0]);saveState();renderTabs();switchPage(i);};te.onclick=()=>switchPage(i);tabsEl.insertBefore(te,addEl);});}function switchPage(i){current=i;winCfg.active=i;saveState();renderTabs();pages.forEach((p,idx)=>p.page.style.display=idx===i?'block':'none');}function addPage(){winCfg.tabs.push({label:'Seite '+winCfg.tabs.length,content:'',images:[]});const p=createPage(winCfg.tabs[winCfg.tabs.length-1]);pages.push(p);renderTabs();switchPage(pages.length-1);}winCfg.tabs.forEach(tab=>pages.push(createPage(tab)));renderTabs();switchPage(current);makeDraggable(win,bar,id);return win;}function handleDrop(e,container,tab){e.preventDefault();const f=e.dataTransfer.files[0];if(!f||!f.type.startsWith('image/'))return;const reader=new FileReader();reader.onload=ev=>{const src=ev.target.result;if(tab)tab.images.push({src});else state.mapImages.push({src});const{wrapper}=createImageElement({src},container,tab);container.appendChild(wrapper);if(!tab)container.appendChild(mapDrop);saveState();};reader.readAsDataURL(f);}function createImageElement(imgData,container,tab){const wrapper=document.createElement('div');wrapper.style.position='relative';wrapper.style.marginBottom='10px';const img=document.createElement('img');img.src=imgData.src;img.style.width='100%';const ctrls=document.createElement('div');ctrls.className='img-controls';ctrls.innerHTML='<button class="del">✕</button><button class="toggle-view">⛶</button><button class="move-up">↑</button><button class="move-down">↓</button>';
+      ctrls.querySelector('.del').onclick=()=>{wrapper.remove();if(tab)tab.images=tab.images.filter(i=>i.src!==imgData.src);else state.mapImages=state.mapImages.filter(i=>i.src!==imgData.src);saveState();};let full=false;ctrls.querySelector('.toggle-view').onclick=()=>{full=!full;img.style.width=full?'auto':'100%';img.style.maxHeight=full?'100%':'none';};ctrls.querySelector('.move-up').onclick=()=>{const p=wrapper.parentNode;if(p&&wrapper.previousElementSibling)p.insertBefore(wrapper,wrapper.previousElementSibling);};ctrls.querySelector('.move-down').onclick=()=>{const p=wrapper.parentNode;if(p&&wrapper.nextElementSibling)p.insertBefore(wrapper.nextElementSibling,wrapper);};wrapper.append(img,ctrls);return{wrapper,img,ctrls};}function makeDraggable(el,hdl,id){let dragging=false,ox=0,oy=0;hdl.onmousedown=e=>{dragging=true;ox=e.clientX-el.offsetLeft;oy=e.clientY-el.offsetTop;};document.onmousemove=e=>{if(dragging){el.style.left=(e.clientX-ox)+'px';el.style.top=(e.clientY-oy)+'px';}};document.onmouseup=()=>{if(dragging){dragging=false;const c=state.windows[id];c.x=parseInt(el.style.left);c.y=parseInt(el.style.top);saveState();}};}function saveState(){if(typeof localStorage!=='undefined')localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+      if(typeof localStorage!=='undefined'){const sv=localStorage.getItem(STORAGE_KEY);if(sv)try{state=JSON.parse(sv);rebuildWindows();state.mapImages.forEach(img=>{const{wrapper}=createImageElement(img,document.querySelector('.map-area'),null);document.querySelector('.map-area').appendChild(wrapper);});statusMsg.textContent='Loaded';}catch{}}  });
+  </script>
+</body>
+</html>
