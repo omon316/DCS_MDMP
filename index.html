@@ -36,6 +36,16 @@
       pointer-events: auto;
       z-index: 0;
     }
+	.window-resize-bl {
+	  position: absolute;
+	  bottom: 0;
+	  right: 0;
+	  width: 16px;
+	  height: 16px;
+	  cursor: nwse-resize;
+	  background: rgba(255,255,255,0.1);
+	  z-index: 10;
+	}
     .content-drop {
       position: absolute;
       top: 0;
@@ -51,6 +61,29 @@
       pointer-events: auto;
       z-index: 0;
     }
+	.table-row-controls {
+	  display: flex;
+	  justify-content: center;
+	  gap: 4px;
+	  margin-top: 4px;
+	}
+	.table-col-controls {
+	  display: flex;
+	  flex-direction: column;
+	  gap: 4px;
+	}
+	.table-row-controls button,
+	.table-col-controls button {
+	  background: var(--btn);
+	  color: var(--fg);
+	  border: 1px solid #333;
+	  border-radius: 2px;
+	  padding: 2px 6px;
+	  cursor: pointer;
+	  font-size: 14px;
+	  pointer-events: auto;
+		user-select: none;
+	}
     body.editor-mode .map-drop, body.editor-mode .content-drop { display:flex; color:#777; }
     /* Editor Mode Button */
     .editor-mode-button { position:fixed; bottom:12px; left:12px; background:var(--btn); border:none; padding:6px 12px; cursor:pointer; z-index:150; }
@@ -58,7 +91,20 @@
     #editor-mode-info { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); background:var(--highlight); color:#fff; height:44px; line-height:44px; padding:0 12px; z-index:150; }
     body.editor-mode #editor-mode-info { display:block; }
     /* Floating Windows */
-    .floating-window { position:absolute; width:450px; min-height: 200px; height: auto; background:var(--win); border:1px solid #333; box-shadow:2px 2px 5px rgba(0,0,0,0.4); border-radius:4px; resize:both; display:flex; flex-direction:column; z-index:200; }
+   .floating-window {
+  position: absolute;
+  width: 450px;
+  min-height: 200px;
+  height: auto; /* wichtig: keine feste Höhe */
+  background: var(--win);
+  border: 1px solid #333;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* <– wichtig für volle Breite */
+  z-index: 200;
+}
     .window-taskbar { background:var(--hdr); padding:6px 8px; cursor:grab; display:flex; align-items:center; color:#fff; }
     .window-taskbar span { flex:1; }
     .window-taskbar button { background:transparent; border:none; color:#fff; cursor:pointer; }
@@ -71,20 +117,54 @@
     .editor-toolbar { display:none; gap:6px; background:rgba(255,255,255,0.1); padding:4px; }
     body.editor-mode .editor-toolbar { display:flex; }
     .editor-toolbar button { background:none; border:none; color:var(--fg); cursor:pointer; font-weight:bold; }
-    .content-area { padding:8px; overflow:auto; outline:none; position:relative; height:auto; }
+	.content-area {
+		padding: 8px;
+		outline: none;
+		position: relative;
+		flex-grow: 1;
+		overflow: visible;
+	}
     .imageWrapper {$1
     z-index: 1;
-  }
+	}
     .imageWrapper img { display:block; max-width:100%; }
     .imageControls { position:absolute; top:4px; right:4px; display:flex; gap:4px; z-index:2; }
     .imageControls button { background:var(--btn); color:var(--fg); border:1px solid #333; border-radius:2px; padding:2px 4px; cursor:pointer; }
-    .briefing-table-wrapper { position:relative; margin:8px 0; }
-    .briefing-table { border-collapse:collapse; width:100%; table-layout:fixed; }
+    .briefing-table-wrapper { position: relative; margin: 8px 0; overflow-x: auto; /* Scrollbalken bei kleinerem Fenster */}
+    .briefing-table { border-collapse: collapse; width: max-content; /* Nur so breit wie nötig */ table-layout: auto; /* Spaltenbreite richtet sich nach Inhalt */}
     .briefing-table th, .briefing-table td { border:1px solid #444; padding:4px; }
     .column-grip { position:absolute; top:0; right:0; width:5px; height:100%; cursor:col-resize; }
     .table-controls { display:flex; justify-content:center; margin-top:4px; }
     .table-controls button { background:var(--btn); color:var(--fg); border:1px solid #333; border-radius:2px; padding:2px 6px; cursor:pointer; margin:0 2px; }
-  </style>
+	.briefing-table-wrapper {
+	  position: relative;
+	  margin: 8px 0;
+	  overflow-x: auto;
+	  display: flex;
+	  align-items: flex-start;
+	}
+	.table-button-sidebar {
+	  display: flex;
+	  flex-direction: column;
+	  margin-left: 4px;
+	  gap: 4px;
+	}
+	.table-button-sidebar button {
+	  background: var(--btn);
+	  color: var(--fg);
+	  border: 1px solid #333;
+	  border-radius: 2px;
+	  padding: 2px 6px;
+	  cursor: pointer;
+	  font-size: 14px;
+	  user-select: none;
+	}
+	.table-row-controls button {
+		pointer-events: auto;
+		user-select: none;
+	}
+
+	  </style>
 </head>
 <body>
   <div class="top-bar">
@@ -227,7 +307,37 @@
         makeDrop(ca);
         et.querySelector('.insert-table').addEventListener('click', () => openTable(ca, key));
         et.querySelector('.del-table-btn').addEventListener('click', () => { const tbl = ca.querySelector('.briefing-table-wrapper'); if (tbl) tbl.remove(); });
-        document.body.append(win); addTab(win, 'Seite 1', '');
+        // Resize-Handle unten links hinzufügen
+const resizeBL = document.createElement('div');
+resizeBL.className = 'window-resize-bl';
+win.append(resizeBL);
+
+resizeBL.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  const startX = e.clientX;
+  const startY = e.clientY;
+  const startWidth = win.offsetWidth;
+  const startHeight = win.offsetHeight;
+
+  function onMouseMove(ev) {
+    const dx = ev.clientX - startX;
+    const dy = ev.clientY - startY;
+    win.style.width = (startWidth + dx) + 'px';
+    win.style.height = (startHeight + dy) + 'px';
+  }
+
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
+
+
+document.body.append(win);
+addTab(win, 'Seite 1', '');
       }));
 
       function addTab(win, label, content) {
@@ -241,7 +351,21 @@
         tab.addEventListener('click', () => activateTab(win, tab));
         tabsEl.insertBefore(tab, tabsEl.lastChild); activateTab(win, tab);
       }
-      function activateTab(win, tab) { win.querySelectorAll('.window-tabs .tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); win.querySelector('.content-area').innerHTML = tab._content; }
+      function activateTab(win, newTab) {
+  const contentArea = win.querySelector('.content-area');
+
+  // Vorherigen Tab speichern
+  const currentTab = win.querySelector('.window-tabs .tab.active');
+  if (currentTab) {
+    currentTab._content = contentArea.innerHTML;
+  }
+
+  // Neuen Tab aktivieren
+  win.querySelectorAll('.window-tabs .tab').forEach(t => t.classList.remove('active'));
+  newTab.classList.add('active');
+  contentArea.innerHTML = newTab._content || '';
+}
+
       function removeTab(win, tab) { const tabs = Array.from(win.querySelectorAll('.window-tabs .tab')); if (tabs.length>1) { const active = tab.classList.contains('active'); tab.remove(); if (active) activateTab(win, win.querySelector('.window-tabs .tab')); }}
       function makeDraggable(win, handle) { handle.onmousedown = e => { const ox = e.clientX - win.offsetLeft, oy = e.clientY - win.offsetTop; function move(ev) { win.style.left = (ev.clientX-ox)+'px'; win.style.top = (ev.clientY-oy)+'px'; } document.addEventListener('mousemove', move); document.addEventListener('mouseup', () => document.removeEventListener('mousemove', move), { once: true }); }; }
       function makeDrop(el) { el.addEventListener('dragover', e => e.preventDefault()); el.addEventListener('drop', e => { e.preventDefault(); const files = Array.from(e.dataTransfer.files); files.forEach(file => { if (!file.type.startsWith('image/')) return; const r = new FileReader(); r.onload = evt => { const wrapper = document.createElement('div'); wrapper.className = 'imageWrapper'; const img = document.createElement('img'); img.src = evt.target.result; img.style.width = '100%'; wrapper.append(img); makeImgCtrls(wrapper); el.parentNode.insertBefore(wrapper, el.nextSibling); }; r.readAsDataURL(file); }); }); }
@@ -261,27 +385,134 @@
         const cg = document.createElement('colgroup'); hdr.forEach(()=>cg.append(document.createElement('col'))); tbl.append(cg);
         const theadRow = tbl.createTHead().insertRow(); hdr.forEach(h => { const th=theadRow.insertCell(); th.contentEditable=true; th.textContent=h; th.style.position='relative'; const grip=document.createElement('div'); grip.className='column-grip'; grip.addEventListener('mousedown', startColResize); th.append(grip); });
         const tbdy = tbl.createTBody(); for (let i=0; i<rowCount; i++) { const tr=tbdy.insertRow(); hdr.forEach(()=>{ const td=tr.insertCell(); td.contentEditable=true; }); }
-        wrap.append(tbl);
+// Spaltensteuerung an Seite
+		const colSidebar = document.createElement('div');
+		colSidebar.className = 'table-button-sidebar';
+		['add-col-btn', 'del-col-btn', 'del-table-btn'].forEach(cls => {
+		  const b = document.createElement('button');
+		  b.className = cls;
+		  b.textContent = cls === 'del-table-btn' ? '❌' : (cls.includes('add') ? '➕' : '➖');
+		  if (cls === 'del-table-btn') {
+			b.addEventListener('click', () => wrap.remove());
+		  } else {
+			b.addEventListener('click', () => tableControl(cls, cg, theadRow, tbdy));
+		  }
+		  colSidebar.append(b);
+		});
+// Container mit Tabelle + Buttons rechts
+		const innerWrapper = document.createElement('div');
+		innerWrapper.style.display = 'flex';
+		innerWrapper.append(tbl, colSidebar);
+		wrap.append(innerWrapper);
         const dropZone = area.querySelector('.content-drop') || area.firstChild;
-        area.insertBefore(wrap, dropZone);
-        const ctrl = document.createElement('div'); ctrl.className = 'table-controls';
-        ['add-col-btn','del-col-btn','add-row-btn','del-row-btn','del-table-btn'].forEach(cls => {
-          const b = document.createElement('button'); b.className = cls;
-          b.textContent = cls === 'del-table-btn' ? 'Tabelle löschen' : (cls.includes('add') ? '+' : '–');
-          if (cls === 'del-table-btn') {
-            b.addEventListener('click', () => wrap.remove());
-          } else {
-            b.addEventListener('click', () => tableControl(cls, cg, theadRow, tbdy));
-          }
-          ctrl.append(b);
-        });
-        wrap.append(ctrl);
-      }
-      function tableControl(action,cg,theadRow,tbdy){ if (action==='add-col-btn'){ const col=document.createElement('col'); cg.append(col); theadRow.insertCell().contentEditable=true; tbdy.querySelectorAll('tr').forEach(tr=>tr.insertCell().contentEditable=true); } if (action==='del-col-btn'&&cg.children.length>1){ cg.lastChild.remove(); theadRow.deleteCell(-1); tbdy.querySelectorAll('tr').forEach(tr=>tr.deleteCell(-1)); } if (action==='add-row-btn'){ const nr=tbdy.insertRow(); cg.querySelectorAll('col').forEach(()=>nr.insertCell().contentEditable=true);} if (action==='del-row-btn'&&tbdy.rows.length>1){ tbdy.deleteRow(-1);} }
-      let startX,startW,target;
-      function startColResize(e){ e.preventDefault(); const idx=[...e.target.parentElement.parentElement.cells].indexOf(e.target.parentElement); target=document.querySelector('.briefing-table-wrapper table colgroup').children[idx]; startX=e.clientX; startW=target.getBoundingClientRect().width; document.addEventListener('mousemove',onColResize); document.addEventListener('mouseup',stopColResize,{once:true}); }
-      function onColResize(e){ target.style.width=(startW+(e.clientX-startX))+'px'; }
-      function stopColResize(){ document.removeEventListener('mousemove',onColResize); }
+// Wrapper für Text und Tabelle
+		const contentWrapper = document.createElement('div');
+		contentWrapper.style.display = 'flex';
+		contentWrapper.style.flexDirection = 'column';
+		contentWrapper.style.gap = '8px';
+
+// Optionaler Text über der Tabelle
+		const textAbove = document.createElement('div');
+		textAbove.contentEditable = true;
+		textAbove.style.minHeight = '20px';
+		textAbove.style.border = '1px dashed #555';
+		textAbove.style.padding = '4px';
+		textAbove.style.color = 'var(--fg)';
+		textAbove.innerText = 'Text';
+		contentWrapper.appendChild(textAbove);
+
+// Die Tabelle mit Buttons
+		contentWrapper.appendChild(wrap);
+
+// Optionaler Text unter der Tabelle
+		const textBelow = document.createElement('div');
+		textBelow.contentEditable = true;
+		textBelow.style.minHeight = '20px';
+		textBelow.style.border = '1px dashed #555';
+		textBelow.style.padding = '4px';
+		textBelow.style.color = 'var(--fg)';
+		textBelow.innerText = 'Text';
+		contentWrapper.appendChild(textBelow);
+
+// Einfügen in den Editor
+		area.insertBefore(contentWrapper, dropZone);
+
+// Zeilensteuerung unter der Tabelle
+		const rowCtrl = document.createElement('div');
+		rowCtrl.className = 'table-row-controls';
+		['add-row-btn', 'del-row-btn'].forEach(cls => {
+		  const b = document.createElement('button');
+		  b.className = cls;
+		  b.textContent = cls.includes('add') ? '➕' : '➖';
+		  b.addEventListener('click', () => tableControl(cls, cg, theadRow, tbdy));
+		  rowCtrl.append(b);
+		});
+		wrap.append(rowCtrl);
+	}
+      function tableControl(action, cg, theadRow, tbdy) {
+  if (action === 'add-col-btn') {
+    const col = document.createElement('col');
+    cg.append(col);
+
+    // Neue Kopfzelle mit Resizer
+    const th = theadRow.insertCell();
+    th.contentEditable = true;
+    th.textContent = 'Header';
+    th.style.position = 'relative';
+
+    const grip = document.createElement('div');
+    grip.className = 'column-grip';
+    grip.addEventListener('mousedown', startColResize);
+    th.append(grip);
+
+    // Neue Zelle in jeder Tabellenzeile
+    tbdy.querySelectorAll('tr').forEach(tr => {
+      const td = tr.insertCell();
+      td.contentEditable = true;
+    });
+  }
+
+  if (action === 'del-col-btn' && cg.children.length > 1) {
+    cg.lastChild.remove();
+    theadRow.deleteCell(-1);
+    tbdy.querySelectorAll('tr').forEach(tr => tr.deleteCell(-1));
+  }
+
+  if (action === 'add-row-btn') {
+    const nr = tbdy.insertRow();
+    cg.querySelectorAll('col').forEach(() => {
+      const td = nr.insertCell();
+      td.contentEditable = true;
+    });
+  }
+
+  if (action === 'del-row-btn' && tbdy.rows.length > 1) {
+    tbdy.deleteRow(-1);
+  }
+}
+
+// Spaltenbreiten-Resizer
+let startX, startW, target;
+
+function startColResize(e) {
+  e.preventDefault();
+  const idx = [...e.target.parentElement.parentElement.cells].indexOf(e.target.parentElement);
+  target = document.querySelector('.briefing-table-wrapper table colgroup').children[idx];
+  startX = e.clientX;
+  startW = target.getBoundingClientRect().width;
+
+  document.addEventListener('mousemove', onColResize);
+  document.addEventListener('mouseup', stopColResize, { once: true });
+}
+
+function onColResize(e) {
+  target.style.width = (startW + (e.clientX - startX)) + 'px';
+}
+
+function stopColResize() {
+  document.removeEventListener('mousemove', onColResize);
+}
+
     });
   </script>
 </body>
