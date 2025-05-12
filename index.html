@@ -6,13 +6,25 @@
   <title>DCS Planungstool</title>
   <style>
 	body, html {
+  margin: 0;
+  padding: 0;
   width: 100%;
   height: 100%;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: sans-serif;
-  overflow: auto;
+  overflow: hidden;
 }
+
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  pointer-events: none;
+}
+
+
     :root { --bg:#1e1e2e; --fg:#d4d4d4; --bar:#252525; --btn:#333; --active:#007acc; --win:#2a2a2e; --hdr:#333; --highlight:#e74c3c; }
     * { box-sizing:border-box; margin:0; padding:0; }
     body, html { width:100%; height:100%; background:var(--bg); color:var(--fg); font-family:sans-serif; overflow: visible; }
