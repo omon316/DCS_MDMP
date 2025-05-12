@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DCS Planungstool</title>
   <style>
-	body, html {
+body, html {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: sans-serif;
 }
-
 #bg-video {
   position: fixed;
   top: 0;
@@ -27,8 +29,7 @@
 
     :root { --bg:#1e1e2e; --fg:#d4d4d4; --bar:#252525; --btn:#333; --active:#007acc; --win:#2a2a2e; --hdr:#333; --highlight:#e74c3c; }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body, html { width:100%; height:100%; background:var(--bg); color:var(--fg); font-family:sans-serif; overflow: visible; }
-    /* Top Bar */
+       /* Top Bar */
     .top-bar { position:fixed; top:0; left:0; right:0; height:44px; background:var(--bar); display:flex; align-items:center; padding:0 12px; z-index:100; }
     .top-bar input, .top-bar select, .top-bar button { margin:0 6px; background:var(--btn); border:1px solid #333; border-radius:3px; padding:4px 8px; color:var(--fg); }
     .top-bar input[readonly] { background:var(--btn); }
