@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DCS Planungstool</title>
+  <style>
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: sans-serif;
+}
+.map-area { 
+	position:relative; 
+	overflow:hidden; 
+	width:100%; 
+	height:100%; }
+
+/* Video als Hintergrund */
+ .map-area #bg-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+/* Karten-Controls darüber */
+    .map-drop,
+    .floating-window {
+      position: relative;
+      z-index: 1;
+    }
+
+    :root { --bg:#1e1e2e; --fg:#d4d4d4; --bar:#252525; --btn:#333; --active:#007acc; --win:#2a2a2e; --hdr:#333; --highlight:#e74c3c; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+       /* Top Bar */
+    .top-bar { position:fixed; top:0; left:0; right:0; height:44px; background:var(--bar); display:flex; align-items:center; padding:0 12px; z-index:100; }
+    .top-bar input, .top-bar select, .top-bar button { margin:0 6px; background:var(--btn); border:1px solid #333; border-radius:3px; padding:4px 8px; color:var(--fg); }
+    .top-bar input[readonly] { background:var(--btn); }
+    .top-bar-right { margin-left:auto; display:flex; align-items:center; }
+    /* Left Panel */
+    .left-panel { position:fixed; top:44px; left:0; right:0; display:flex; background:var(--bar); padding:4px; z-index:99; }
+    .left-panel button { flex:1; margin:0 4px; background:var(--btn); border:none; color:var(--fg); padding:6px; cursor:pointer; }
+    .left-panel button.active { background:var(--active); color:#fff; }
+    /* Container */
+    .container { position:absolute; top:96px; bottom:0; left:0; right:0; overflow:auto; }
+   
+  .map-area::before,
+.map-area::after {
+  display: none;
+}
+    .map-drop {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 30%;
+      height: 3em;
+      border: 2px dashed #777;
+      background: rgba(30,30,46,0.5);
+      color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+	.window-resize-bl {
+	  position: absolute;
+	  bottom: 0;
+	  right: 0;
+	  width: 16px;
+	  height: 16px;
+	  cursor: nwse-resize;
+	  background: rgba(255,255,255,0.1);
+	  z-index: 10;
+	}
+    .content-drop {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 30%;
+      height: 3em;
+      border: 2px dashed #777;
+      background: rgba(30,30,46,0.5);
+      color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 0;
+    }
+	.table-row-controls {
+	  display: flex;
+	  justify-content: center;
+	  gap: 4px;
+	  margin-top: 4px;
+	}
+	.table-col-controls {
+	  display: flex;
+	  flex-direction: column;
+	  gap: 4px;
+	}
+	.table-row-controls button,
+	.table-col-controls button {
+	  background: var(--btn);
+	  color: var(--fg);
+	  border: 1px solid #333;
+	  border-radius: 2px;
+	  padding: 2px 6px;
+	  cursor: pointer;
+	  font-size: 14px;
+	  pointer-events: auto;
+		user-select: none;
+	}
+    body.editor-mode .map-drop, body.editor-mode .content-drop { display:flex; color:#777; }
+    /* Editor Mode Button */
+    .editor-mode-button { position:fixed; bottom:12px; left:12px; background:var(--btn); border:none; padding:6px 12px; cursor:pointer; z-index:150; }
+    body.editor-mode .editor-mode-button { background:var(--highlight); }
+    #editor-mode-info { display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); background:var(--highlight); color:#fff; height:44px; line-height:44px; padding:0 12px; z-index:150; }
+    body.editor-mode #editor-mode-info { display:block; }
+    /* Floating Windows */
+   .floating-window {
+  position: absolute;
+  width: 450px;
+  min-height: 200px;
+  height: auto; /* wichtig: keine feste Höhe */
+  background: var(--win);
+  border: 1px solid #333;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* <– wichtig für volle Breite */
+  z-index: 200;
+}
+    .window-taskbar { background:var(--hdr); padding:6px 8px; cursor:grab; display:flex; align-items:center; color:#fff; }
+    .window-taskbar span { flex:1; }
+    .window-taskbar button { background:transparent; border:none; color:#fff; cursor:pointer; }
+    .window-tabs { display:flex; background:#2b2b2b; }
+    .window-tabs .tab { padding:4px 8px; background:var(--btn); color:var(--fg); cursor:pointer; display:flex; align-items:center; border-right:1px solid #444; }
+    .window-tabs .tab.active { background:var(--active); color:#fff; }
+    .window-tabs .tab input { background:transparent; border:none; color:inherit; width:auto; }
+    .window-tabs .tab .close-tab { margin-left:4px; cursor:pointer; }
+    .add-tab { padding:4px 8px; background:#555; color:#fff; cursor:pointer; }
+    .editor-toolbar { display:none; gap:6px; background:rgba(255,255,255,0.1); padding:4px; }
+    body.editor-mode .editor-toolbar { display:flex; }
+    .editor-toolbar button { background:none; border:none; color:var(--fg); cursor:pointer; font-weight:bold; }
+	.content-area {
+		padding: 8px;
+		outline: none;
+		position: relative;
+		flex-grow: 1;
+		overflow: visible;
+	}
+    .imageWrapper {
+	position:relative;
+   	z-index: 1;
+	}
+    .imageWrapper img { display:block; max-width:100%; }
+    .imageControls { position:absolute; top:4px; right:4px; display:flex; gap:4px; z-index:2; }
+    .imageControls button { background:var(--btn); color:var(--fg); border:1px solid #333; border-radius:2px; padding:2px 4px; cursor:pointer; }
+    .briefing-table-wrapper { position: relative; margin: 8px 0; overflow-x: auto; /* Scrollbalken bei kleinerem Fenster */}
+    .briefing-table { border-collapse: collapse; width: max-content; /* Nur so breit wie nötig */ table-layout: auto; /* Spaltenbreite richtet sich nach Inhalt */}
+    .briefing-table th, .briefing-table td { border:1px solid #444; padding:4px; }
+    .column-grip { position:absolute; top:0; right:0; width:5px; height:100%; cursor:col-resize; }
+    .table-controls { display:flex; justify-content:center; margin-top:4px; }
+    .table-controls button { background:var(--btn); color:var(--fg); border:1px solid #333; border-radius:2px; padding:2px 6px; cursor:pointer; margin:0 2px; }
+	.briefing-table-wrapper {
+	  position: relative;
+	  margin: 8px 0;
+	  overflow-x: auto;
+	  display: flex;
+	  align-items: flex-start;
+	}
+	.table-button-sidebar {
+	  display: flex;
+	  flex-direction: column;
+	  margin-left: 4px;
+	  gap: 4px;
+	}
+	.table-button-sidebar button {
+	  background: var(--btn);
+	  color: var(--fg);
+	  border: 1px solid #333;
+	  border-radius: 2px;
+	  padding: 2px 6px;
+	  cursor: pointer;
+	  font-size: 14px;
+	  user-select: none;
+	}
+	.table-row-controls button {
+		pointer-events: auto;
+		user-select: none;
+	}
+
+	  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <label>OPERATION:</label>
+    <input id="mission-name" placeholder="Missionsname" readonly>
+    <label>Map:</label>
+    <select id="map-select" disabled></select>
+    <span id="map-display"></span>
+    <div class="top-bar-right">
+      <label>Start:</label>
+      <input id="takeoff-date" type="date" disabled>
+      <input id="takeoff-time" type="time" disabled>
+      <button id="save-btn">Save</button>
+      <button id="load-btn">Load</button>
+    </div>
+  </div>
+  <div class="left-panel">
+    <button data-window="Threats">Threats</button>
+    <button data-window="Situation">Situation</button>
+    <button data-window="Mission">Mission</button>
+    <button data-window="Package">Package</button>
+    <button data-window="Flightplan">Flightplan</button>
+    <button data-window="Agencies">Agencies</button>
+    <button data-window="Charts">Charts</button>
+    <button data-window="Comm Ladder">Comm Ladder</button>
+  </div>
+  <div class="container"><div class="map-area"><div class="map-drop">Drag & Drop</div>
+
+  <video autoplay muted loop playsinline controls preload="auto" id="bg-video">
+  <source src="/video.mp4" type="video/mp4">
+  Dein Browser unterstützt das Video-Tag nicht.
+</video>
+	  
+  </div></div>
+  <button id="editor-mode-button" class="editor-mode-button">Editor Mode</button>
+  <div id="editor-mode-info">Editor Mode</div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let winOffset = 0;
+      const editorBtn = document.getElementById('editor-mode-button');
+      const missionInput = document.getElementById('mission-name');
+      const mapSelect = document.getElementById('map-select');
+      const mapDisplay = document.getElementById('map-display');
+      const dateInput = document.getElementById('takeoff-date');
+      const timeInput = document.getElementById('takeoff-time');
+      const saveBtn = document.getElementById('save-btn');
+      const loadBtn = document.getElementById('load-btn');
+
+      ['Caucasus','Afghanistan','Persian Gulf','Iraq','Syria','Kola','Europe','NTTR','South Pacific'].forEach(m => {
+        const o = document.createElement('option'); o.value = m; o.textContent = m; mapSelect.append(o);
+      });
+      mapDisplay.textContent = mapSelect.value;
+      mapSelect.addEventListener('change', () => mapDisplay.textContent = mapSelect.value);
+
+      editorBtn.addEventListener('click', () => {
+        const edit = document.body.classList.toggle('editor-mode');
+        missionInput.readOnly = !edit;
+        mapSelect.disabled = !edit;
+        dateInput.disabled = !edit;
+        timeInput.disabled = !edit;
+        document.querySelectorAll('.map-drop, .content-drop').forEach(el => el.style.display = 'flex');
+        document.querySelectorAll('.editor-toolbar').forEach(tb => tb.style.display = edit ? 'flex' : 'none');
+        document.querySelectorAll('.content-area').forEach(ca => ca.contentEditable = edit);
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const state = { mission: missionInput.value, map: mapSelect.value, date: dateInput.value, time: timeInput.value, mapImages: [], windows: [] };
+        document.querySelectorAll('.map-area img').forEach(i => state.mapImages.push(i.src));
+        document.querySelectorAll('.floating-window').forEach(win => {
+          const key = win.dataset.window;
+          const tabs = [];
+          win.querySelectorAll('.window-tabs .tab').forEach(tab => tabs.push({ label: tab.querySelector('input').value, content: tab._content }));
+          const imgs = [];
+          win.querySelectorAll('.content-area img').forEach(i => imgs.push(i.src));
+          state.windows.push({ key, left: win.style.left, top: win.style.top, tabs, imgSrcs: imgs });
+        });
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'dcs-plan.json'; document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      });
+
+      loadBtn.addEventListener('click', () => {
+        const input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json';
+        input.onchange = e => {
+          const file = e.target.files[0]; if (!file) return;
+          const r = new FileReader(); r.onload = evt => {
+            const state = JSON.parse(evt.target.result);
+            missionInput.value = state.mission;
+            mapSelect.value = state.map; mapDisplay.textContent = state.map;
+            dateInput.value = state.date; timeInput.value = state.time;
+            document.querySelectorAll('.map-area img').forEach(i => i.remove());
+            state.mapImages.forEach(src => { const img = new Image(); img.src = src; img.style.width = '100%'; document.querySelector('.map-area').append(img); });
+            document.querySelectorAll('.floating-window').forEach(w => w.remove());
+            state.windows.forEach(wi => {
+              const btn = document.querySelector(`.left-panel button[data-window="${wi.key}"]`);
+              btn.click();
+              const win = document.querySelector(`.floating-window[data-window="${wi.key}"]`);
+              win.style.left = wi.left; win.style.top = wi.top;
+              const ca = win.querySelector('.content-area'); ca.innerHTML = '';
+              wi.imgSrcs.forEach(src => { const img = new Image(); img.src = src; img.style.width = '100%'; makeImgCtrls(img); ca.append(img); });
+              win._tabs = wi.tabs; win.querySelector('.window-tabs').innerHTML = '';
+              wi.tabs.forEach(t => addTab(win, t.label, t.content));
+            });
+          
+              // Update tab content after inserting image
+              const contentArea = el.parentNode;
+              contentArea.dispatchEvent(new Event('input'));
+            }; r.readAsText(file);
+        }; input.click();
+      });
+
+      document.querySelectorAll('.left-panel button').forEach(btn => btn.addEventListener('click', () => {
+        const key = btn.dataset.window;
+        let win = document.querySelector(`.floating-window[data-window="${key}"]`);
+        if (win) {
+          win.style.display = win.style.display === 'none' ? 'flex' : 'none';
+          btn.classList.toggle('active');
+          return;
+        }
+        btn.classList.add('active'); winOffset++;
+        win = document.createElement('div'); win.className = 'floating-window'; win.dataset.window = key;
+        win.style.left = `${100 + winOffset*30}px`; win.style.top = `${100 + winOffset*30}px`;
+        const tb = document.createElement('div'); tb.className = 'window-taskbar'; tb.innerHTML = `<span>${key}</span><button>×</button>`;
+        tb.querySelector('button').addEventListener('click', () => { win.style.display = 'none'; btn.classList.remove('active'); }); win.append(tb); makeDraggable(win, tb);
+        const tabsEl = document.createElement('div'); tabsEl.className = 'window-tabs';
+        const addT = document.createElement('div'); addT.className = 'add-tab'; addT.textContent = '+';
+        addT.addEventListener('click', () => addTab(win, 'Seite', ''));
+        tabsEl.append(addT); win.append(tabsEl);
+        const et = document.createElement('div'); et.className = 'editor-toolbar';
+        et.innerHTML = `<button data-cmd='bold'>B</button><button data-cmd='increase'>A+</button><button data-cmd='decrease'>A-</button><button class='insert-table'>Tabelle</button><button class='del-table-btn'>Löschen</button>`;
+        et.querySelectorAll('[data-cmd]').forEach(b => b.addEventListener('click', e => {
+          const cmd = e.currentTarget.dataset.cmd;
+          win.querySelector('.content-area').focus();
+          if (cmd === 'bold') document.execCommand('bold');
+          else if (cmd === 'increase') document.execCommand('increaseFontSize');
+          else if (cmd === 'decrease') document.execCommand('decreaseFontSize');
+        })); win.append(et);
+        const ca = document.createElement('div'); ca.className = 'content-area'; ca.contentEditable = document.body.classList.contains('editor-mode');
+        // Update tab content on edits
+        ca.addEventListener('input', () => {
+          const activeTab = win.querySelector('.window-tabs .tab.active');
+          if (activeTab) activeTab._content = ca.innerHTML;
+        });
+        win.append(ca);
+        const cdrop = document.createElement('div'); cdrop.className = 'content-drop'; cdrop.textContent = 'Drag & Drop'; ca.append(cdrop);
+        makeDrop(cdrop);
+        // allow dropping anywhere in content area too
+        makeDrop(ca);
+        et.querySelector('.insert-table').addEventListener('click', () => openTable(ca, key));
+        et.querySelector('.del-table-btn').addEventListener('click', () => { const tbl = ca.querySelector('.briefing-table-wrapper'); if (tbl) tbl.remove(); });
+        // Resize-Handle unten links hinzufügen
+const resizeBL = document.createElement('div');
+resizeBL.className = 'window-resize-bl';
+win.append(resizeBL);
+
+resizeBL.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  const startX = e.clientX;
+  const startY = e.clientY;
+  const startWidth = win.offsetWidth;
+  const startHeight = win.offsetHeight;
+
+  function onMouseMove(ev) {
+    const dx = ev.clientX - startX;
+    const dy = ev.clientY - startY;
+    win.style.width = (startWidth + dx) + 'px';
+    win.style.height = (startHeight + dy) + 'px';
+  }
+
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
+
+
+document.body.append(win);
+addTab(win, 'Seite 1', '');
+      }));
+
+      function addTab(win, label, content) {
+        const tabsEl = win.querySelector('.window-tabs');
+        const tab = document.createElement('div'); tab.className = 'tab';
+        const inp = document.createElement('input'); inp.value = label; inp.readOnly = !document.body.classList.contains('editor-mode');
+        inp.addEventListener('input', () => tab._label = inp.value);
+        const close = document.createElement('span'); close.className = 'close-tab'; close.textContent = '×';
+        close.addEventListener('click', e => { e.stopPropagation(); removeTab(win, tab); });
+        tab.append(inp, close); tab._content = content;
+        tab.addEventListener('click', () => activateTab(win, tab));
+        tabsEl.insertBefore(tab, tabsEl.lastChild); activateTab(win, tab);
+      }
+      function activateTab(win, newTab) {
+  const contentArea = win.querySelector('.content-area');
+
+  // Vorherigen Tab speichern
+  const currentTab = win.querySelector('.window-tabs .tab.active');
+  if (currentTab) {
+    currentTab._content = contentArea.innerHTML;
+  }
+
+  // Neuen Tab aktivieren
+  win.querySelectorAll('.window-tabs .tab').forEach(t => t.classList.remove('active'));
+  newTab.classList.add('active');
+  contentArea.innerHTML = newTab._content || '';
+}
+
+      function removeTab(win, tab) { const tabs = Array.from(win.querySelectorAll('.window-tabs .tab')); if (tabs.length>1) { const active = tab.classList.contains('active'); tab.remove(); if (active) activateTab(win, win.querySelector('.window-tabs .tab')); }}
+      function makeDraggable(win, handle) { handle.onmousedown = e => { const ox = e.clientX - win.offsetLeft, oy = e.clientY - win.offsetTop; function move(ev) { win.style.left = (ev.clientX-ox)+'px'; win.style.top = (ev.clientY-oy)+'px'; } document.addEventListener('mousemove', move); document.addEventListener('mouseup', () => document.removeEventListener('mousemove', move), { once: true }); }; }
+      function makeDrop(el) { el.addEventListener('dragover', e => e.preventDefault()); el.addEventListener('drop', e => { e.preventDefault(); const files = Array.from(e.dataTransfer.files); files.forEach(file => { if (!file.type.startsWith('image/')) return; const r = new FileReader(); r.onload = evt => { const wrapper = document.createElement('div'); wrapper.className = 'imageWrapper'; const img = document.createElement('img'); img.src = evt.target.result; img.style.width = '100%'; wrapper.append(img); makeImgCtrls(wrapper); el.parentNode.insertBefore(wrapper, el.nextSibling); }; r.readAsDataURL(file); }); }); }
+      makeDrop(document.querySelector('.map-drop'));
+      // Image controls
+      function makeImgCtrls(wrapper) { const ctrls = document.createElement('div'); ctrls.className = 'imageControls'; ['↑','↓','⛶','✕'].forEach(sym => { const btn = document.createElement('button'); btn.textContent = sym; btn.addEventListener('click', () => { if (sym==='✕') wrapper.remove(); else if (sym==='↑' && wrapper.previousElementSibling && wrapper.previousElementSibling.classList.contains('imageWrapper')) wrapper.parentNode.insertBefore(wrapper, wrapper.previousElementSibling); else if (sym==='↓' && wrapper.nextElementSibling && wrapper.nextElementSibling.classList.contains('imageWrapper')) wrapper.parentNode.insertBefore(wrapper.nextElementSibling, wrapper); else if (sym==='⛶') { if (wrapper.style.width === '100%') wrapper.style.width = 'auto'; else wrapper.style.width = '100%'; } }); ctrls.append(btn); }); wrapper.style.position = 'relative'; wrapper.append(ctrls); }
+      // Table
+      function openTable(area, type) {
+        const colInput = prompt('Anzahl Spalten (0 = default)', '0 (default)'); if (colInput===null) return;
+        const rowInput = prompt('Anzahl Zeilen (0 = default)', '0 (default)'); if (rowInput===null) return;
+        const cols = parseInt(colInput), rows = parseInt(rowInput);
+        const defs = { Package:['Callsign','Type','Mission','TACAN','Push'], Flightplan:['#','NAVAID','Time','TOS','Location','Action','Alt','Formation','Min. Fuel'], Agencies:['Type','Mission','Callsign','TACAN','Location'], 'Comm Ladder':['Agency','Callsign','UHF[Ch]','VHF[Ch]'] };
+        const hdr = (cols===0 && defs[type]) ? defs[type] : (cols>0 ? Array.from({length:cols},(_,i)=>'Header'+(i+1)) : ['Header1','Header2','Header3']);
+        const rowCount = rows>0 ? rows : 3;
+        const wrap = document.createElement('div'); wrap.className='briefing-table-wrapper';
+        const tbl = document.createElement('table'); tbl.className='briefing-table';
+        const cg = document.createElement('colgroup'); hdr.forEach(()=>cg.append(document.createElement('col'))); tbl.append(cg);
+        const theadRow = tbl.createTHead().insertRow(); hdr.forEach(h => { const th=theadRow.insertCell(); th.contentEditable=true; th.textContent=h; th.style.position='relative'; const grip=document.createElement('div'); grip.className='column-grip'; grip.addEventListener('mousedown', startColResize); th.append(grip); });
+        const tbdy = tbl.createTBody(); for (let i=0; i<rowCount; i++) { const tr=tbdy.insertRow(); hdr.forEach(()=>{ const td=tr.insertCell(); td.contentEditable=true; }); }
+// Spaltensteuerung an Seite
+		const colSidebar = document.createElement('div');
+		colSidebar.className = 'table-button-sidebar';
+		['add-col-btn', 'del-col-btn', 'del-table-btn'].forEach(cls => {
+		  const b = document.createElement('button');
+		  b.className = cls;
+		  b.textContent = cls === 'del-table-btn' ? '❌' : (cls.includes('add') ? '➕' : '➖');
+		  if (cls === 'del-table-btn') {
+			b.addEventListener('click', () => wrap.remove());
+		  } else {
+			b.addEventListener('click', () => tableControl(cls, cg, theadRow, tbdy));
+		  }
+		  colSidebar.append(b);
+		});
+// Container mit Tabelle + Buttons rechts
+		const innerWrapper = document.createElement('div');
+		innerWrapper.style.display = 'flex';
+		innerWrapper.append(tbl, colSidebar);
+		wrap.append(innerWrapper);
+        const dropZone = area.querySelector('.content-drop') || area.firstChild;
+// Wrapper für Text und Tabelle
+		const contentWrapper = document.createElement('div');
+		contentWrapper.style.display = 'flex';
+		contentWrapper.style.flexDirection = 'column';
+		contentWrapper.style.gap = '8px';
+
+// Optionaler Text über der Tabelle
+		const textAbove = document.createElement('div');
+		textAbove.contentEditable = true;
+		textAbove.style.minHeight = '20px';
+		textAbove.style.border = '1px dashed #555';
+		textAbove.style.padding = '4px';
+		textAbove.style.color = 'var(--fg)';
+		textAbove.innerText = 'Text';
+		contentWrapper.appendChild(textAbove);
+
+// Die Tabelle mit Buttons
+		contentWrapper.appendChild(wrap);
+
+// Optionaler Text unter der Tabelle
+		const textBelow = document.createElement('div');
+		textBelow.contentEditable = true;
+		textBelow.style.minHeight = '20px';
+		textBelow.style.border = '1px dashed #555';
+		textBelow.style.padding = '4px';
+		textBelow.style.color = 'var(--fg)';
+		textBelow.innerText = 'Text';
+		contentWrapper.appendChild(textBelow);
+
+// Einfügen in den Editor
+		area.insertBefore(contentWrapper, dropZone);
+
+// Zeilensteuerung unter der Tabelle
+		const rowCtrl = document.createElement('div');
+		rowCtrl.className = 'table-row-controls';
+		['add-row-btn', 'del-row-btn'].forEach(cls => {
+		  const b = document.createElement('button');
+		  b.className = cls;
+		  b.textContent = cls.includes('add') ? '➕' : '➖';
+		  b.addEventListener('click', () => tableControl(cls, cg, theadRow, tbdy));
+		  rowCtrl.append(b);
+		});
+		wrap.append(rowCtrl);
+	}
+      function tableControl(action, cg, theadRow, tbdy) {
+  if (action === 'add-col-btn') {
+    const col = document.createElement('col');
+    cg.append(col);
+
+    // Neue Kopfzelle mit Resizer
+    const th = theadRow.insertCell();
+    th.contentEditable = true;
+    th.textContent = 'Header';
+    th.style.position = 'relative';
+
+    const grip = document.createElement('div');
+    grip.className = 'column-grip';
+    grip.addEventListener('mousedown', startColResize);
+    th.append(grip);
+
+    // Neue Zelle in jeder Tabellenzeile
+    tbdy.querySelectorAll('tr').forEach(tr => {
+      const td = tr.insertCell();
+      td.contentEditable = true;
+    });
+  }
+
+  if (action === 'del-col-btn' && cg.children.length > 1) {
+    cg.lastChild.remove();
+    theadRow.deleteCell(-1);
+    tbdy.querySelectorAll('tr').forEach(tr => tr.deleteCell(-1));
+  }
+
+  if (action === 'add-row-btn') {
+    const nr = tbdy.insertRow();
+    cg.querySelectorAll('col').forEach(() => {
+      const td = nr.insertCell();
+      td.contentEditable = true;
+    });
+  }
+
+  if (action === 'del-row-btn' && tbdy.rows.length > 1) {
+    tbdy.deleteRow(-1);
+  }
+}
+
+// Spaltenbreiten-Resizer
+let startX, startW, target;
+
+function startColResize(e) {
+  e.preventDefault();
+  const idx = [...e.target.parentElement.parentElement.cells].indexOf(e.target.parentElement);
+  target = document.querySelector('.briefing-table-wrapper table colgroup').children[idx];
+  startX = e.clientX;
+  startW = target.getBoundingClientRect().width;
+
+  document.addEventListener('mousemove', onColResize);
+  document.addEventListener('mouseup', stopColResize, { once: true });
+}
+
+function onColResize(e) {
+  target.style.width = (startW + (e.clientX - startX)) + 'px';
+}
+
+function stopColResize() {
+  document.removeEventListener('mousemove', onColResize);
+}
+
+    });
+  </script>
+</body>
+</html>
