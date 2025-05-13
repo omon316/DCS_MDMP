@@ -15,17 +15,29 @@ body, html {
   color: var(--fg);
   font-family: sans-serif;
 }
-#bg-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: -1;
-  pointer-events: none;
-}
+.map-area { 
+	position:relative; 
+	overflow:hidden; 
+	width:100%; 
+	height:100%; }
 
+/* Video als Hintergrund */
+ .map-area #bg-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+/* Karten-Controls darüber */
+    .map-drop,
+    .floating-window {
+      position: relative;
+      z-index: 1;
+    }
 
     :root { --bg:#1e1e2e; --fg:#d4d4d4; --bar:#252525; --btn:#333; --active:#007acc; --win:#2a2a2e; --hdr:#333; --highlight:#e74c3c; }
     * { box-sizing:border-box; margin:0; padding:0; }
@@ -40,12 +52,11 @@ body, html {
     .left-panel button.active { background:var(--active); color:#fff; }
     /* Container */
     .container { position:absolute; top:96px; bottom:0; left:0; right:0; overflow:auto; }
-    .map-area { position:relative; width:100%; height:100%; }
+   
   .map-area::before,
 .map-area::after {
   display: none;
 }
-
     .map-drop {
       position: absolute;
       top: 0;
@@ -59,7 +70,6 @@ body, html {
       align-items: center;
       justify-content: center;
       pointer-events: auto;
-      z-index: 0;
     }
 	.window-resize-bl {
 	  position: absolute;
@@ -149,8 +159,9 @@ body, html {
 		flex-grow: 1;
 		overflow: visible;
 	}
-    .imageWrapper {$1
-    z-index: 1;
+    .imageWrapper {
+	position:relative;
+   	z-index: 1;
 	}
     .imageWrapper img { display:block; max-width:100%; }
     .imageControls { position:absolute; top:4px; right:4px; display:flex; gap:4px; z-index:2; }
@@ -192,11 +203,6 @@ body, html {
 	  </style>
 </head>
 <body>
-<video autoplay muted loop playsinline controls preload="auto" id="bg-video">
-  <source src="/video3.mp4" type="video/mp4">
-  Dein Browser unterstützt das Video-Tag nicht.
-</video>
-
   <div class="top-bar">
     <label>OPERATION:</label>
     <input id="mission-name" placeholder="Missionsname" readonly>
@@ -221,7 +227,14 @@ body, html {
     <button data-window="Charts">Charts</button>
     <button data-window="Comm Ladder">Comm Ladder</button>
   </div>
-  <div class="container"><div class="map-area"><div class="map-drop">Drag & Drop</div></div></div>
+  <div class="container"><div class="map-area"><div class="map-drop">Drag & Drop</div>
+
+  <video autoplay muted loop playsinline controls preload="auto" id="bg-video">
+  <source src="/video3.mp4" type="video/mp4">
+  Dein Browser unterstützt das Video-Tag nicht.
+</video>
+	  
+  </div></div>
   <button id="editor-mode-button" class="editor-mode-button">Editor Mode</button>
   <div id="editor-mode-info">Editor Mode</div>
   <script>
