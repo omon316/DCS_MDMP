@@ -266,50 +266,82 @@ body, html {
         document.querySelectorAll('.content-area').forEach(ca => ca.contentEditable = edit);
       });
 
-      saveBtn.addEventListener('click', () => {
-        const state = { mission: missionInput.value, map: mapSelect.value, date: dateInput.value, time: timeInput.value, mapImages: [], windows: [] };
-        document.querySelectorAll('.map-area img').forEach(i => state.mapImages.push(i.src));
-        document.querySelectorAll('.floating-window').forEach(win => {
-          const key = win.dataset.window;
-          const tabs = [];
-          win.querySelectorAll('.window-tabs .tab').forEach(tab => tabs.push({ label: tab.querySelector('input').value, content: tab._content }));
-          const imgs = [];
-          win.querySelectorAll('.content-area img').forEach(i => imgs.push(i.src));
-          state.windows.push({ key, left: win.style.left, top: win.style.top, tabs, imgSrcs: imgs });
-        });
-        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'dcs-plan.json'; document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-      });
+// --- SAVE ---
+saveBtn.addEventListener('click', () => {
+  const state = {
+    mission: missionInput.value,
+    map:     mapSelect.value,
+    date:    dateInput.value,
+    time:    timeInput.value,
+    windows: []
+  };
 
-      loadBtn.addEventListener('click', () => {
-        const input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json';
-        input.onchange = e => {
-          const file = e.target.files[0]; if (!file) return;
-          const r = new FileReader(); r.onload = evt => {
-            const state = JSON.parse(evt.target.result);
-            missionInput.value = state.mission;
-            mapSelect.value = state.map; mapDisplay.textContent = state.map;
-            dateInput.value = state.date; timeInput.value = state.time;
-            document.querySelectorAll('.map-area img').forEach(i => i.remove());
-            state.mapImages.forEach(src => { const img = new Image(); img.src = src; img.style.width = '100%'; document.querySelector('.map-area').append(img); });
-            document.querySelectorAll('.floating-window').forEach(w => w.remove());
-            state.windows.forEach(wi => {
-              const btn = document.querySelector(`.left-panel button[data-window="${wi.key}"]`);
-              btn.click();
-              const win = document.querySelector(`.floating-window[data-window="${wi.key}"]`);
-              win.style.left = wi.left; win.style.top = wi.top;
-              const ca = win.querySelector('.content-area'); ca.innerHTML = '';
-              wi.imgSrcs.forEach(src => { const img = new Image(); img.src = src; img.style.width = '100%'; makeImgCtrls(img); ca.append(img); });
-              win._tabs = wi.tabs; win.querySelector('.window-tabs').innerHTML = '';
-              wi.tabs.forEach(t => addTab(win, t.label, t.content));
-            });
-          
-              // Update tab content after inserting image
-              const contentArea = el.parentNode;
-              contentArea.dispatchEvent(new Event('input'));
-            }; r.readAsText(file);
-        }; input.click();
+  document.querySelectorAll('.floating-window').forEach(win => {
+    const key = win.dataset.window;
+    const tabs = [];
+    win.querySelectorAll('.window-tabs .tab').forEach(tab => {
+      tabs.push({
+        label:   tab.querySelector('input').value,
+        content: tab._content   // hier stecken alle <img src="data:…">
       });
+    });
+    state.windows.push({ key, left: win.style.left, top: win.style.top, tabs });
+  });
+
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'dcs-plan.json';
+  document.body.append(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+	    
+// --- LOAD ---
+loadBtn.addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type   = 'file';
+  input.accept = 'application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const state = JSON.parse(evt.target.result);
+
+      // 1. Grunddaten wiederherstellen
+      missionInput.value       = state.mission;
+      mapSelect.value          = state.map;
+      mapDisplay.textContent   = state.map;
+      dateInput.value          = state.date;
+      timeInput.value          = state.time;
+
+      // 2. Alte Fenster entfernen
+      document.querySelectorAll('.floating-window').forEach(w => w.remove());
+
+      // 3. Für jedes gespeicherte Fenster: Button klicken & Tabs neu anlegen
+      state.windows.forEach(wi => {
+        const btn = document.querySelector(`.left-panel button[data-window="${wi.key}"]`);
+        btn.click();  // erzeugt das Fenster und initialisiert addTab-Funktion
+
+        const win = document.querySelector(`.floating-window[data-window="${wi.key}"]`);
+        win.style.left = wi.left;
+        win.style.top  = wi.top;
+
+        // bestehende Tabs löschen
+        const tabsEl = win.querySelector('.window-tabs');
+        tabsEl.innerHTML = '';
+
+        // Tabs mit Inhalt wiederherstellen
+        wi.tabs.forEach(t => addTab(win, t.label, t.content));
+      });
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+});
 
       document.querySelectorAll('.left-panel button').forEach(btn => btn.addEventListener('click', () => {
         const key = btn.dataset.window;
