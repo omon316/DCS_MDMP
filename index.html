@@ -309,40 +309,46 @@ loadBtn.addEventListener('click', () => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = evt => {
-      const state = JSON.parse(evt.target.result);
-
-      // 1. Grunddaten wiederherstellen
-      missionInput.value       = state.mission;
-      mapSelect.value          = state.map;
-      mapDisplay.textContent   = state.map;
-      dateInput.value          = state.date;
-      timeInput.value          = state.time;
-
-      // 2. Alte Fenster entfernen
-      document.querySelectorAll('.floating-window').forEach(w => w.remove());
-
-      // 3. Für jedes gespeicherte Fenster: Button klicken & Tabs neu anlegen
-      state.windows.forEach(wi => {
-        const btn = document.querySelector(`.left-panel button[data-window="${wi.key}"]`);
-        btn.click();  // erzeugt das Fenster und initialisiert addTab-Funktion
-
-        const win = document.querySelector(`.floating-window[data-window="${wi.key}"]`);
-        win.style.left = wi.left;
-        win.style.top  = wi.top;
-
-        // bestehende Tabs löschen
-        const tabsEl = win.querySelector('.window-tabs');
-        tabsEl.innerHTML = '';
-
-        // Tabs mit Inhalt wiederherstellen
-        wi.tabs.forEach(t => addTab(win, t.label, t.content));
-      });
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-});
-
+8       const state = JSON.parse(evt.target.result);
+9
+10      // 1. Grunddaten wiederherstellen
+11      missionInput.value     = state.mission;
+12      mapSelect.value        = state.map;
+13      mapDisplay.textContent = state.map;
+14      dateInput.value        = state.date;
+15      timeInput.value        = state.time;
+16
+17      // 2. Alte Fenster entfernen
+18      document.querySelectorAll('.floating-window').forEach(w => w.remove());
+19
+20      // 3. Für jedes gespeicherte Fenster: Button klicken & Tabs neu anlegen
+21      state.windows.forEach(wi => {
+22        const btn = document.querySelector(`.left-panel button[data-window="${wi.key}"]`);
+23        btn.click();  // erzeugt das Fenster
+24        const win = document.querySelector(`.floating-window[data-window="${wi.key}"]`);
+25        win.style.left = wi.left;
+26        win.style.top  = wi.top;
+27
+28        // Tabs säubern und neu befüllen
+29        const tabsEl = win.querySelector('.window-tabs');
+30        tabsEl.innerHTML = '';
+31        wi.tabs.forEach(t => addTab(win, t.label, t.content));
+32      });
+33
+34      // 4. Nur das "Mission"-Fenster anzeigen, alle anderen schließen
+35      document.querySelectorAll('.floating-window').forEach(win => {
+36        if (win.dataset.window !== 'Mission') {
+37          win.style.display = 'none';
+38          document
+39            .querySelector(`.left-panel button[data-window="${win.dataset.window}"]`)
+40            .classList.remove('active');
+41        }
+42      });
+43    };
+44    reader.readAsText(file);
+45  };
+46  input.click();
+47 });
       document.querySelectorAll('.left-panel button').forEach(btn => btn.addEventListener('click', () => {
         const key = btn.dataset.window;
         let win = document.querySelector(`.floating-window[data-window="${key}"]`);
