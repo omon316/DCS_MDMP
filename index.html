@@ -299,14 +299,22 @@ body, html {
               const win = document.querySelector(`.floating-window[data-window="${wi.key}"]`);
               win.style.left = wi.left; win.style.top = wi.top;
               const ca = win.querySelector('.content-area'); ca.innerHTML = '';
-              wi.imgSrcs.forEach(src => { const img = new Image(); img.src = src; img.style.width = '100%'; makeImgCtrls(img); ca.append(img); });
+              wi.imgSrcs.forEach(src => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'imageWrapper';
+                const img = new Image();
+                img.src = src;
+                img.style.width = '100%';
+                wrapper.append(img);
+                makeImgCtrls(wrapper);
+                ca.append(wrapper);
+              });
               win._tabs = wi.tabs; win.querySelector('.window-tabs').innerHTML = '';
               wi.tabs.forEach(t => addTab(win, t.label, t.content));
             });
           
               // Update tab content after inserting image
-              const contentArea = el.parentNode;
-              contentArea.dispatchEvent(new Event('input'));
+              ca.dispatchEvent(new Event('input'));
             }; r.readAsText(file);
         }; input.click();
       });
