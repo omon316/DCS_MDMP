@@ -13,6 +13,7 @@
         <div class="crt-monitor-container">
             <div class="monitor-bezel">
                 <div class="screen-overlay"> <div id="map-area" class="crt-screen-content">
+                        
                         <div class="crt-top-bar">
                             <span class="crt-label">MSN:</span>
                             <span id="mission-name-display" class="crt-value">UNDEFINED</span>
@@ -35,7 +36,7 @@
             </div>
         </div>
 
-        <div class="desk-object hotspot-threats" data-target="threats" title="Open Threat Briefing Folder"></div>
+        <div class="desk-object hotspot-threats" data-target="threats" title="Open Threat Briefing"></div>
         
         <div class="desk-object hotspot-situation" data-target="situation" title="View Situation Map"></div>
         
@@ -43,12 +44,9 @@
          
         <div class="desk-object hotspot-comms" data-target="commladder" title="Use Radio Set"></div>
 
-        <div id="editor-switch-container" class="desk-object hotspot-editor">
-             <button id="editor-mode-button" class="retro-switch-btn">EDIT MODE</button>
-        </div>
+        <div id="editor-switch-container" class="desk-object hotspot-editor" title="Toggle Editor Mode"></div>
 
     </div>
-
 
     <template id="window-template">
         <div class="window-frame crt-window">
@@ -63,7 +61,8 @@
                 <button class="add-tab-btn hidden">[+]</button>
             </div>
             <div class="window-content" contenteditable="false">
-                // AWAITING INPUT...
+                // DATA LINK ESTABLISHED...
+                // WAITING FOR INPUT...
             </div>
         </div>
     </template>
