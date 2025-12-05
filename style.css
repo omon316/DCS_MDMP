@@ -1,242 +1,194 @@
 :root {
-    --bg-dark: #121212;
-    --bg-panel: #2a2a2a;
-    --bg-header: #1a1a1a;
-    --border-color: #555;
-    --accent-color: #00ff41; /* Radar Grün */
-    --accent-active: #ff9900; /* Bernstein für aktiv */
-    --text-main: #e0e0e0;
-    --text-dim: #888;
-    --font-ui: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --font-mono: 'Courier New', Courier, monospace;
+    /* Retro Monochrom Grün Palette */
+    --crt-bg: #0a150a;     /* Fast schwarzer Bildschirmhintergrund */
+    --crt-bright: #33ff33; /* Helles Leuchtgrün */
+    --crt-dim: #1a801a;    /* Dunkleres Grün für inaktive Elemente */
+    --crt-scanline: rgba(0, 20, 0, 0.3);
+    --font-mono: 'Courier New', Courier, monospace; /* Wichtig für den Retro Look */
 }
 
 * {
     box-sizing: border-box;
+    /* Verhindert das Markieren von Text auf dem "Schreibtisch" */
+    user-select: none; 
 }
 
 body, html {
     height: 100%;
     margin: 0;
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    font-family: var(--font-ui);
-    overflow: hidden; /* Verhindert Scrollen der ganzen Seite */
-}
-
-/* --- TOP BAR --- */
-.top-bar {
-    height: 40px;
-    background-color: var(--bg-header);
-    border-bottom: 2px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    padding: 0 15px;
+    background-color: #000;
+    overflow: hidden;
     font-family: var(--font-mono);
 }
 
-.data-block {
-    margin-right: 30px;
-    display: flex;
-    align-items: center;
-}
-
-.data-block label {
-    color: var(--text-dim);
-    margin-right: 10px;
-    font-size: 0.8rem;
-}
-
-.data-value {
-    color: var(--accent-color);
-    font-weight: bold;
-}
-
-.system-status {
-    margin-left: auto;
-    font-size: 0.7rem;
-    color: var(--text-dim);
-}
-
-/* Eingabefelder im JSF Stil */
-input[type="text"], input[type="date"], input[type="time"] {
-    background: #000;
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-    font-family: var(--font-mono);
-    padding: 2px 5px;
-}
-.hidden { display: none !important; }
-
-/* --- MAIN LAYOUT --- */
-.main-container {
-    display: flex;
-    height: calc(100vh - 80px); /* Minus Topbar und Footer */
+/* --- DIE BÜRO SZENE (Hintergrund) --- */
+.office-scene {
     position: relative;
+    width: 100%;
+    height: 100vh;
+    /* HIER DEIN BILD EINFÜGEN! */
+    /* background-image: url('dein-retro-buero-bild.jpg'); */
+    background-size: cover;
+    background-position: center;
+    /* Platzhalter-Hintergrund, falls kein Bild da ist */
+    background: linear-gradient(to bottom, #3d2b1f 0%, #5c4033 60%, #2a1f1a 100%); 
 }
 
-/* --- MAP AREA --- */
-.map-area {
-    flex-grow: 1;
-    background-color: #0d0d0d;
-    position: relative;
-    overflow: auto; /* Scrollbar wenn nötig */
-    background-image: 
-        linear-gradient(var(--border-color) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
-    background-size: 50px 50px; /* Gitternetz */
-    background-position: -1px -1px;
-}
-
-/* --- SIDEBAR --- */
-.sidebar {
-    width: 160px;
-    background-color: var(--bg-panel);
-    border-left: 2px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    padding: 5px;
-    z-index: 100; /* Immer oben */
-}
-
-.sidebar-header {
-    text-align: center;
-    font-weight: bold;
-    padding: 5px;
-    background: #000;
-    margin-bottom: 10px;
-    border: 1px solid var(--border-color);
-    font-size: 0.8rem;
-}
-
-.nav-btn {
-    background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
-    color: var(--text-main);
-    border: 1px solid #000;
-    border-top: 1px solid #555;
-    padding: 10px;
-    margin-bottom: 4px;
-    cursor: pointer;
-    text-align: left;
-    font-family: var(--font-ui);
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    transition: all 0.1s;
-}
-
-.nav-btn:hover {
-    background: #444;
-}
-
-.nav-btn.active {
-    background: var(--accent-active);
-    color: #000;
-    font-weight: bold;
-    border-color: #000;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-}
-
-/* --- WINDOWS (Popups) --- */
-.window-frame {
+/* --- CRT MONITOR CONTAINER --- */
+/* Positioniere dies dort, wo der Monitor in deinem Bild ist */
+.crt-monitor-container {
     position: absolute;
-    width: 300px;
-    height: 200px;
-    background-color: var(--bg-panel);
-    border: 2px solid var(--text-dim);
-    display: flex;
-    flex-direction: column;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
-    min-width: 150px;
-    min-height: 100px;
-    resize: both; /* Skalierbar */
+    top: 10%;
+    left: 25%;
+    width: 50%;
+    height: 60%;
+    background-color: #222; /* Monitor Gehäuse Farbe */
+    padding: 20px; /* Rahmen Dicke */
+    border-radius: 10px;
+    box-shadow: inset 0 0 20px #000, 5px 5px 15px rgba(0,0,0,0.5);
+}
+
+/* Der eigentliche Bildschirm */
+.monitor-bezel {
+    width: 100%;
+    height: 100%;
+    background-color: var(--crt-bg);
+    border-radius: 50% / 10%; /* Leichte Wölbung */
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8); /* Vignette innen */
+}
+
+/* Scanlines und Flackern Overlay */
+.screen-overlay {
+    width: 100%;
+    height: 100%;
+    /* Scanline Muster */
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        var(--crt-scanline) 3px
+    );
+    pointer-events: none; /* Klicks durchlassen */
+    position: absolute;
+    z-index: 999;
+}
+
+/* Der Inhalt des Bildschirms */
+.crt-screen-content {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    padding: 10px;
+    color: var(--crt-bright);
+    text-shadow: 0 0 2px var(--crt-bright); /* Das "Leuchten" */
     overflow: auto;
 }
 
-.window-header {
-    background-color: #111;
-    color: var(--text-main);
-    padding: 4px 8px;
-    cursor: move; /* Zeigt an, dass man ziehen kann */
+/* --- CRT TOP BAR (Im Bildschirm) --- */
+.crt-top-bar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.85rem;
-    font-weight: bold;
-}
-
-.win-close {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: #ff4444;
-    cursor: pointer;
-    width: 20px;
-    height: 20px;
-    line-height: 16px;
-    text-align: center;
-    padding: 0;
-}
-
-.window-tabs-bar {
-    background: #222;
-    display: flex;
-    padding: 2px 2px 0 2px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.tab {
-    padding: 4px 10px;
-    background: #333;
-    margin-right: 2px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    border-top: 1px solid #555;
-    border-left: 1px solid #555;
-    border-right: 1px solid #555;
-}
-
-.tab.active {
-    background: var(--bg-panel); /* Gleiche Farbe wie Content */
-    border-bottom: 1px solid var(--bg-panel); /* "Öffnet" den Tab nach unten */
-    margin-bottom: -1px;
-    z-index: 10;
-}
-
-.window-content {
-    flex-grow: 1;
-    padding: 10px;
-    font-family: var(--font-mono);
+    border-bottom: 2px dashed var(--crt-dim);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
     font-size: 0.9rem;
-    color: #ddd;
-    overflow-y: auto;
+}
+
+.crt-label { color: var(--crt-dim); margin-right: 5px; }
+.crt-value { font-weight: bold; }
+.crt-separator { margin: 0 15px; color: var(--crt-dim); }
+.system-status { margin-left: auto; }
+.blink { animation: blinker 1s linear infinite; }
+@keyframes blinker { 50% { opacity: 0; } }
+
+.crt-input {
+    background: var(--crt-bg);
+    border: 1px solid var(--crt-bright);
+    color: var(--crt-bright);
+    font-family: var(--font-mono);
+    padding: 2px;
+}
+.hidden { display: none !important; }
+
+
+/* --- DESK OBJECTS (Die Hotspots) --- */
+/* Gemeinsame Klasse für alle klickbaren Objekte */
+.desk-object {
+    position: absolute;
+    cursor: pointer; /* Zeigefinger-Cursor */
+    /* Zum Testen farbig, später 'transparent' machen! */
+    background-color: rgba(255, 0, 0, 0.3); 
+    border: 2px dashed yellow;
+    transition: background-color 0.2s;
+}
+.desk-object:hover {
+    background-color: rgba(255, 255, 0, 0.4); /* Highlight beim Drüberfahren */
+}
+
+
+/* POSITIONIERUNG DER HOTSPOTS */
+/* Du musst diese Werte an DEIN Hintergrundbild anpassen */
+
+/* Beispiel: Ordner links unten */
+.hotspot-threats {
+    bottom: 5%; left: 5%; width: 15%; height: 20%;
+}
+/* Beispiel: Karte mittig unten */
+.hotspot-situation {
+    bottom: 2%; left: 30%; width: 40%; height: 25%;
+}
+/* Beispiel: Klemmbrett rechts */
+.hotspot-mission {
+    top: 20%; right: 5%; width: 15%; height: 30%;
+}
+/* Beispiel: Funkgerät oben links */
+.hotspot-comms {
+    top: 5%; left: 2%; width: 10%; height: 15%;
+}
+
+/* Der Editor Schalter (unten rechts am Monitor z.B.) */
+.hotspot-editor {
+    top: 72%; left: 70%; width: auto; height: auto;
+    border: none; background: none;
+}
+.retro-switch-btn {
+    background: #333; color: var(--crt-dim);
+    border: 2px solid #111; padding: 5px 10px;
+    font-family: var(--font-mono); cursor: pointer;
+    box-shadow: 2px 2px 0 #000;
+}
+.retro-switch-btn.editing {
+    color: var(--crt-bright); background: #444;
+    box-shadow: inset 2px 2px 0 #000; /* Eingedrückt Effekt */
+}
+
+
+/* --- CRT FENSTER STYLE --- */
+/* Überschreibt den alten Stil für den Monochrom-Look */
+.window-frame.crt-window {
+    background-color: var(--crt-bg);
+    border: 2px solid var(--crt-bright);
+    box-shadow: 5px 5px 0 rgba(0,20,0,0.5); /* Retro Schatten */
+    color: var(--crt-bright);
+}
+.window-header {
+    background-color: var(--crt-dim);
+    color: #000;
+    border-bottom: 2px solid var(--crt-bright);
+}
+.win-close {
+    color: #000; font-weight: bold; border: none; background: none;
+}
+.window-tabs-bar { background: #000; border-bottom: 1px solid var(--crt-bright); }
+.tab {
+    background: #000; color: var(--crt-dim);
+    border: 1px solid var(--crt-dim); border-bottom: none;
+}
+.tab.active {
+    background: var(--crt-bg); color: var(--crt-bright);
+    border-color: var(--crt-bright); font-weight: bold;
 }
 .window-content[contenteditable="true"] {
-    background-color: #222;
-    outline: 1px dashed #555;
-}
-
-/* --- FOOTER / EDITOR MODE --- */
-.footer-controls {
-    height: 40px;
-    background: #1a1a1a;
-    border-top: 2px solid var(--border-color);
-    padding: 5px;
-    display: flex;
-    align-items: center;
-}
-
-.mode-btn {
-    background: #004080;
-    color: white;
-    border: 1px solid #0066cc;
-    padding: 5px 15px;
-    font-family: var(--font-mono);
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.mode-btn.editing {
-    background: #ff9900;
-    color: black;
-    border-color: #cc7a00;
+    outline: 1px dashed var(--crt-bright); background: #111;
 }
