@@ -1,0 +1,242 @@
+:root {
+    --bg-dark: #121212;
+    --bg-panel: #2a2a2a;
+    --bg-header: #1a1a1a;
+    --border-color: #555;
+    --accent-color: #00ff41; /* Radar Grün */
+    --accent-active: #ff9900; /* Bernstein für aktiv */
+    --text-main: #e0e0e0;
+    --text-dim: #888;
+    --font-ui: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-mono: 'Courier New', Courier, monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    overflow: hidden; /* Verhindert Scrollen der ganzen Seite */
+}
+
+/* --- TOP BAR --- */
+.top-bar {
+    height: 40px;
+    background-color: var(--bg-header);
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    font-family: var(--font-mono);
+}
+
+.data-block {
+    margin-right: 30px;
+    display: flex;
+    align-items: center;
+}
+
+.data-block label {
+    color: var(--text-dim);
+    margin-right: 10px;
+    font-size: 0.8rem;
+}
+
+.data-value {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.system-status {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+/* Eingabefelder im JSF Stil */
+input[type="text"], input[type="date"], input[type="time"] {
+    background: #000;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    font-family: var(--font-mono);
+    padding: 2px 5px;
+}
+.hidden { display: none !important; }
+
+/* --- MAIN LAYOUT --- */
+.main-container {
+    display: flex;
+    height: calc(100vh - 80px); /* Minus Topbar und Footer */
+    position: relative;
+}
+
+/* --- MAP AREA --- */
+.map-area {
+    flex-grow: 1;
+    background-color: #0d0d0d;
+    position: relative;
+    overflow: auto; /* Scrollbar wenn nötig */
+    background-image: 
+        linear-gradient(var(--border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+    background-size: 50px 50px; /* Gitternetz */
+    background-position: -1px -1px;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 160px;
+    background-color: var(--bg-panel);
+    border-left: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    z-index: 100; /* Immer oben */
+}
+
+.sidebar-header {
+    text-align: center;
+    font-weight: bold;
+    padding: 5px;
+    background: #000;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    font-size: 0.8rem;
+}
+
+.nav-btn {
+    background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+    color: var(--text-main);
+    border: 1px solid #000;
+    border-top: 1px solid #555;
+    padding: 10px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    transition: all 0.1s;
+}
+
+.nav-btn:hover {
+    background: #444;
+}
+
+.nav-btn.active {
+    background: var(--accent-active);
+    color: #000;
+    font-weight: bold;
+    border-color: #000;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+}
+
+/* --- WINDOWS (Popups) --- */
+.window-frame {
+    position: absolute;
+    width: 300px;
+    height: 200px;
+    background-color: var(--bg-panel);
+    border: 2px solid var(--text-dim);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+    min-width: 150px;
+    min-height: 100px;
+    resize: both; /* Skalierbar */
+    overflow: auto;
+}
+
+.window-header {
+    background-color: #111;
+    color: var(--text-main);
+    padding: 4px 8px;
+    cursor: move; /* Zeigt an, dass man ziehen kann */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.win-close {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: #ff4444;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    line-height: 16px;
+    text-align: center;
+    padding: 0;
+}
+
+.window-tabs-bar {
+    background: #222;
+    display: flex;
+    padding: 2px 2px 0 2px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+    padding: 4px 10px;
+    background: #333;
+    margin-right: 2px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-top: 1px solid #555;
+    border-left: 1px solid #555;
+    border-right: 1px solid #555;
+}
+
+.tab.active {
+    background: var(--bg-panel); /* Gleiche Farbe wie Content */
+    border-bottom: 1px solid var(--bg-panel); /* "Öffnet" den Tab nach unten */
+    margin-bottom: -1px;
+    z-index: 10;
+}
+
+.window-content {
+    flex-grow: 1;
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: #ddd;
+    overflow-y: auto;
+}
+.window-content[contenteditable="true"] {
+    background-color: #222;
+    outline: 1px dashed #555;
+}
+
+/* --- FOOTER / EDITOR MODE --- */
+.footer-controls {
+    height: 40px;
+    background: #1a1a1a;
+    border-top: 2px solid var(--border-color);
+    padding: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.mode-btn {
+    background: #004080;
+    color: white;
+    border: 1px solid #0066cc;
+    padding: 5px 15px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.mode-btn.editing {
+    background: #ff9900;
+    color: black;
+    border-color: #cc7a00;
+}
