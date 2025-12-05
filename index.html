@@ -3,63 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCS Mission Planner - JSF Style</title>
+    <title>DCS Planner - '93 Office Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="data-block">
-            <label>MISSION:</label>
-            <span id="mission-name-display" class="data-value">UNDEFINED</span>
-            <input type="text" id="mission-name-input" class="edit-input hidden">
-        </div>
-        <div class="data-block">
-            <label>TAKEOFF:</label>
-            <span id="takeoff-display" class="data-value">--.--.---- --:--</span>
-            <div id="takeoff-inputs" class="edit-input hidden">
-                <input type="date" id="takeoff-date">
-                <input type="time" id="takeoff-time">
+    <div class="office-scene">
+
+        <div class="crt-monitor-container">
+            <div class="monitor-bezel">
+                <div class="screen-overlay"> <div id="map-area" class="crt-screen-content">
+                        <div class="crt-top-bar">
+                            <span class="crt-label">MSN:</span>
+                            <span id="mission-name-display" class="crt-value">UNDEFINED</span>
+                            <input type="text" id="mission-name-input" class="crt-input hidden">
+                            
+                            <span class="crt-separator">|</span>
+                            
+                            <span class="crt-label">T/O:</span>
+                            <span id="takeoff-display" class="crt-value">--:--Z</span>
+                            <div id="takeoff-inputs" class="crt-input-group hidden">
+                                <input type="date" id="takeoff-date" class="crt-input">
+                                <input type="time" id="takeoff-time" class="crt-input">
+                            </div>
+                             <span class="system-status blink">READY_</span>
+                        </div>
+                        
+                        <div class="map-grid"></div>
+                        </div>
+                </div>
             </div>
         </div>
-        <div class="system-status">SYSTEM: ONLINE</div>
-    </div>
 
-    <div class="main-container">
+        <div class="desk-object hotspot-threats" data-target="threats" title="Open Threat Briefing Folder"></div>
         
-        <div id="map-area" class="map-area">
-            <div class="map-grid"></div> </div>
+        <div class="desk-object hotspot-situation" data-target="situation" title="View Situation Map"></div>
+        
+        <div class="desk-object hotspot-mission" data-target="mission" title="Read Mission Orders"></div>
+         
+        <div class="desk-object hotspot-comms" data-target="commladder" title="Use Radio Set"></div>
 
-        <div class="sidebar">
-            <div class="sidebar-header">MENU</div>
-            <button class="nav-btn" data-target="threats">THREATS</button>
-            <button class="nav-btn" data-target="situation">SITUATION</button>
-            <button class="nav-btn" data-target="mission">MISSION</button>
-            <button class="nav-btn" data-target="package">PACKAGE</button>
-            <button class="nav-btn" data-target="flightplan">FLIGHTPLAN</button>
-            <button class="nav-btn" data-target="charts">CHARTS</button>
-            <button class="nav-btn" data-target="commladder">COMMS</button>
+        <div id="editor-switch-container" class="desk-object hotspot-editor">
+             <button id="editor-mode-button" class="retro-switch-btn">EDIT MODE</button>
         </div>
+
     </div>
 
-    <div class="footer-controls">
-        <button id="editor-mode-button" class="mode-btn">EDITOR MODE: OFF</button>
-    </div>
 
     <template id="window-template">
-        <div class="window-frame">
+        <div class="window-frame crt-window">
             <div class="window-header">
-                <span class="window-title">TITLE</span>
+                <span class="window-title">TITLE_</span>
                 <div class="window-controls">
-                    <button class="win-close">X</button>
+                    <button class="win-close">[X]</button>
                 </div>
             </div>
             <div class="window-tabs-bar">
-                <div class="tab active">Main</div>
-                <button class="add-tab-btn hidden">+</button>
+                <div class="tab active">MAIN_DATA</div>
+                <button class="add-tab-btn hidden">[+]</button>
             </div>
             <div class="window-content" contenteditable="false">
-                </div>
+                // AWAITING INPUT...
+            </div>
         </div>
     </template>
 
