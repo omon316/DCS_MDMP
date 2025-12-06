@@ -3,68 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCS Planner - '93 Office Edition</title>
+    <title>F-16 Mission Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="office-scene">
+    <div class="desk-surface">
+        
+        <div class="decor-rbf">REMOVE BEFORE FLIGHT</div>
 
-        <div class="crt-monitor-container">
-            <div class="monitor-bezel">
-                <div class="screen-overlay"> <div id="map-area" class="crt-screen-content">
-                        
-                        <div class="crt-top-bar">
-                            <span class="crt-label">MSN:</span>
-                            <span id="mission-name-display" class="crt-value">UNDEFINED</span>
-                            <input type="text" id="mission-name-input" class="crt-input hidden">
-                            
-                            <span class="crt-separator">|</span>
-                            
-                            <span class="crt-label">T/O:</span>
-                            <span id="takeoff-display" class="crt-value">--:--Z</span>
-                            <div id="takeoff-inputs" class="crt-input-group hidden">
-                                <input type="date" id="takeoff-date" class="crt-input">
-                                <input type="time" id="takeoff-time" class="crt-input">
-                            </div>
-                             <span class="system-status blink">READY_</span>
-                        </div>
-                        
-                        <div class="map-grid"></div>
-                        </div>
-                </div>
+        <div class="desk-item item-ato" data-target="ato">
+            <div class="ato-header">ATO / FRAG</div>
+            <div class="ato-content">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line highlight"></div>
+                <div class="line"></div>
+            </div>
+            <div class="ato-clip"></div>
+        </div>
+
+        <div class="desk-item item-chart-stack" data-target="charts-menu">
+            <div class="chart-layer layer-3"></div>
+            <div class="chart-layer layer-2"></div>
+            <div class="chart-layer layer-1">
+                <div class="jepp-header">JEPPESEN</div>
+                <div class="jepp-airport">UGTB / TBS</div>
+                <div class="jepp-circle">11-1</div>
             </div>
         </div>
 
-        <div class="desk-object hotspot-threats" data-target="threats" title="Open Threat Briefing"></div>
-        
-        <div class="desk-object hotspot-situation" data-target="situation" title="View Situation Map"></div>
-        
-        <div class="desk-object hotspot-mission" data-target="mission" title="Read Mission Orders"></div>
-         
-        <div class="desk-object hotspot-comms" data-target="commladder" title="Use Radio Set"></div>
+        <div class="desk-item item-ammo-box" data-target="loadout">
+            <div class="box-handle"></div>
+            <div class="box-label">STORES<br>MGMT</div>
+            <div class="hazard-stripe"></div>
+        </div>
 
-        <div id="editor-switch-container" class="desk-object hotspot-editor" title="Toggle Editor Mode"></div>
+        <div class="desk-item item-radio" data-target="comms">
+            <div class="radio-screen">UHF: 251.00</div>
+            <div class="radio-knobs">
+                <div class="knob"></div>
+                <div class="knob"></div>
+            </div>
+            <div class="radio-label">ARC-210</div>
+        </div>
+
+        <div class="monitor-casing">
+            <div class="monitor-bezel">
+                <div class="osb osb-l"></div>
+                <div class="osb osb-r"></div>
+                
+                <div class="monitor-screen">
+                    <div class="crt-scanlines"></div>
+                    
+                    <div class="crt-content">
+                        <div class="top-bar">
+                            <span class="mode-indicator">NAV_MODE</span>
+                            <span id="clock" class="pull-right">12:00:00Z</span>
+                        </div>
+                        
+                        <div id="screen-view-container">
+                            <div class="view-main">
+                                <div class="falcon-logo">F-16C BLK 50</div>
+                                <p>SYSTEM READY.</p>
+                                <p>SELECT MFD PAGE.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="power-led"></div>
+        </div>
+
+        <div class="desk-item item-switch" id="editor-switch">
+            <div class="switch-housing">
+                <div class="switch-lever"></div>
+            </div>
+            <span class="switch-label">MASTER ARM</span>
+        </div>
 
     </div>
 
-    <template id="window-template">
-        <div class="window-frame crt-window">
-            <div class="window-header">
-                <span class="window-title">TITLE_</span>
-                <div class="window-controls">
-                    <button class="win-close">[X]</button>
-                </div>
-            </div>
-            <div class="window-tabs-bar">
-                <div class="tab active">MAIN_DATA</div>
-                <button class="add-tab-btn hidden">[+]</button>
-            </div>
-            <div class="window-content" contenteditable="false">
-                // DATA LINK ESTABLISHED...
-                // WAITING FOR INPUT...
-            </div>
+    <template id="template-ato">
+        <div class="screen-header">AIR TASKING ORDER</div>
+        <div class="screen-body content-editable">
+            <p>TASK: CAS / STRIKE</p>
+            <p>PACKAGE: UZI 1</p>
+            <p>TOT: 14:30Z</p>
+            <p>----------------</p>
+            <p>ORDNANCE: 4x GBU-12, 2x AIM-120</p>
         </div>
+        <button class="btn-back">RTN</button>
+    </template>
+
+    <template id="template-charts-menu">
+        <div class="screen-header">CHART SELECT</div>
+        <div class="screen-body chart-list">
+            <button class="mfd-btn" onclick="loadChartImage('https://upload.wikimedia.org/wikipedia/commons/9/9a/Sample_Airport_Chart.png')">1. KOBULETI (KBL)</button>
+            <button class="mfd-btn" onclick="loadChartImage('https://upload.wikimedia.org/wikipedia/commons/9/9a/Sample_Airport_Chart.png')">2. TBILISI (TBS)</button>
+            <button class="mfd-btn" onclick="loadChartImage('https://upload.wikimedia.org/wikipedia/commons/9/9a/Sample_Airport_Chart.png')">3. SENAKI (UGKS)</button>
+        </div>
+        <button class="btn-back">RTN</button>
+    </template>
+
+    <template id="template-chart-view">
+        <div class="screen-header">CHART VIEWER</div>
+        <div class="screen-body chart-container">
+            <img id="chart-display-img" src="" alt="Chart Loading...">
+        </div>
+        <button class="btn-back">RTN</button>
+    </template>
+
+    <template id="template-loadout">
+        <div class="screen-header">STORES MANAGEMENT</div>
+        <div class="screen-body content-editable">
+            <p>STA 1: AIM-120C</p>
+            <p>STA 2: AIM-9X</p>
+            <p>STA 3: AGM-65D</p>
+            <p>STA 4: GBU-12</p>
+            <p>STA 5: 300 GAL TANK</p>
+        </div>
+        <button class="btn-back">RTN</button>
+    </template>
+
+    <template id="template-comms">
+        <div class="screen-header">COMMUNICATION</div>
+        <div class="screen-body content-editable">
+            <p>UHF: 251.00 (MAIN)</p>
+            <p>VHF: 124.00 (TOWER)</p>
+            <p>IDM: 11-01</p>
+            <p>TACAN: 29X</p>
+        </div>
+        <button class="btn-back">RTN</button>
     </template>
 
     <script src="script.js"></script>
