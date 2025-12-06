@@ -1,188 +1,226 @@
 :root {
-    /* Retro Monochrom Grün Palette */
-    --crt-bg: #0a150a;     
-    --crt-bright: #33ff33; 
-    --crt-dim: #1a801a;    
-    --crt-scanline: rgba(0, 20, 0, 0.3);
-    --font-mono: 'Courier New', Courier, monospace; 
+    --desk-color: #263238; /* Dunkles Metall */
+    --mfd-bg: #101510;     /* Sehr dunkles Grün/Schwarz */
+    --mfd-text: #00ff41;   /* MFD Grün */
+    --warning: #ffb300;    /* Safety Yellow */
+    --font-stencil: 'Black Ops One', cursive;
+    --font-mono: 'Share Tech Mono', monospace;
+    --shadow-hard: 5px 5px 10px rgba(0,0,0,0.8);
 }
 
-* {
-    box-sizing: border-box;
-    user-select: none; /* Verhindert Textmarkierung auf dem Tisch */
-}
-
-body, html {
-    height: 100%;
+body {
     margin: 0;
-    background-color: #000;
     overflow: hidden;
+    background: #111;
     font-family: var(--font-mono);
+    color: #eee;
 }
 
-/* --- HINTERGRUND (Das Büro) --- */
-.office-scene {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    /* Hier wird dein Bild geladen */
-    background-image: url('background.jpg'); 
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-/* --- CRT MONITOR (Der Bildschirm) --- */
-.crt-monitor-container {
+/* --- TISCHOBERFLÄCHE (Metallplatte) --- */
+.desk-surface {
     position: absolute;
-    /* Positionierung passend zum Monitor im Bild */
-    top: 14%;       
-    left: 37.5%;
-    width: 25%;
-    height: 34%;
-    background-color: transparent; 
-    border-radius: 20px; 
-    transform: rotate(-0.5deg); /* Leichte Drehung wie im Bild */
-    box-shadow: inset 0 0 40px #000;
-    z-index: 10;
+    bottom: 0; width: 100%; height: 90vh;
+    background: #2c3e50;
+    /* Metall-Textur simuliert */
+    background-image: 
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 60%),
+        repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 4px);
+    border-top: 5px solid #1a1a1a;
+    perspective: 800px;
 }
 
+/* --- DEKO: REMOVE BEFORE FLIGHT --- */
+.decor-rbf {
+    position: absolute; left: -50px; bottom: 20%;
+    width: 300px; height: 40px;
+    background: #d32f2f;
+    color: white; font-family: var(--font-stencil); font-size: 1.5rem;
+    display: flex; align-items: center; justify-content: center;
+    transform: rotate(90deg);
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
+    z-index: 5;
+    pointer-events: none; /* Nicht klickbar */
+    border: 2px solid white;
+}
+
+/* --- ALLGEMEINE ITEMS --- */
+.desk-item {
+    position: absolute; cursor: pointer;
+    transition: all 0.2s; box-shadow: var(--shadow-hard);
+}
+.desk-item:hover {
+    transform: scale(1.02) translateY(-2px);
+    filter: brightness(1.1);
+}
+
+/* 1. ATO BOARD (Klemmbrett) */
+.item-ato {
+    width: 220px; height: 300px;
+    background: #212121; /* Dunkles Plastik */
+    left: 5%; bottom: 10%;
+    transform: rotate(-5deg);
+    border-radius: 5px;
+    border: 1px solid #444;
+}
+.ato-clip {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    width: 80px; height: 30px; background: #silver;
+    background: linear-gradient(to bottom, #999, #666);
+    border-radius: 5px; box-shadow: 0 2px 5px #000;
+}
+.ato-header {
+    text-align: center; margin-top: 30px; 
+    font-family: var(--font-stencil); color: #888; letter-spacing: 2px;
+}
+.ato-content {
+    background: #fff; width: 90%; height: 75%; margin: 10px auto;
+    opacity: 0.9; padding: 10px; box-sizing: border-box;
+}
+.ato-content .line { height: 2px; background: #333; margin-bottom: 15px; }
+.ato-content .highlight { background: var(--warning); height: 5px; opacity: 0.5; }
+
+/* 2. JEPPESEN CHART STACK */
+.item-chart-stack {
+    width: 180px; height: 240px;
+    right: 22%; bottom: 8%;
+    transform: rotate(5deg);
+}
+.chart-layer {
+    position: absolute; width: 100%; height: 100%;
+    background: #fdfbf7; /* Eierschale/Papier */
+    border: 1px solid #ccc;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+.layer-3 { top: 4px; left: 4px; transform: rotate(-2deg); }
+.layer-2 { top: 2px; left: 2px; transform: rotate(1deg); }
+.layer-1 { 
+    top: 0; left: 0; 
+    display: flex; flex-direction: column; 
+    padding: 10px; box-sizing: border-box;
+}
+.jepp-header { border-bottom: 2px solid #000; font-weight: bold; font-size: 0.8rem; color: #000; }
+.jepp-airport { font-weight: bold; font-size: 1.2rem; margin-top: 5px; color: #000;}
+.jepp-circle { 
+    border: 2px solid #000; border-radius: 50%; width: 40px; height: 40px; 
+    margin-top: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #000;
+}
+
+/* 3. AMMO BOX (Loadout) */
+.item-ammo-box {
+    width: 200px; height: 120px;
+    background: #3e4a3d; /* Olive Drab */
+    right: 5%; bottom: 35%;
+    transform: rotate(-3deg);
+    border: 2px solid #2e3a2d;
+}
+.box-handle {
+    width: 60px; height: 10px; background: #111;
+    margin: 10px auto; border-radius: 5px;
+}
+.box-label {
+    color: var(--warning); font-family: var(--font-stencil);
+    text-align: center; border: 2px solid var(--warning);
+    width: 80%; margin: 5px auto; padding: 5px;
+}
+.hazard-stripe {
+    position: absolute; bottom: 10px; width: 100%; height: 10px;
+    background: repeating-linear-gradient(45deg, #000, #000 10px, var(--warning) 10px, var(--warning) 20px);
+}
+
+/* 4. FUNKGERÄT (Modern) */
+.item-radio {
+    width: 160px; height: 100px;
+    background: #222; border-top: 3px solid #444;
+    left: 2%; top: 15%;
+}
+.radio-screen {
+    background: #2e4033; color: #00ff00;
+    font-family: 'Share Tech Mono'; padding: 5px;
+    margin: 10px; text-align: right; border: 1px inset #555;
+}
+.radio-knobs { display: flex; justify-content: space-around; }
+.knob { width: 20px; height: 20px; background: #111; border-radius: 50%; border: 1px solid #555; }
+.radio-label { color: #555; font-size: 0.6rem; text-align: center; margin-top: 5px; }
+
+
+/* 5. MONITOR (Ruggedized / MFD Style) */
+.monitor-casing {
+    position: absolute; left: 50%; top: -80px; transform: translateX(-50%);
+    width: 450px; height: 380px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,1);
+}
 .monitor-bezel {
-    width: 100%;
-    height: 100%;
-    background-color: var(--crt-bg);
-    border-radius: 50% / 10%; /* Wölbung der Röhre */
+    width: 100%; height: 100%;
+    background: #000;
+    border: 4px solid #333;
+    border-radius: 5px;
+    position: relative;
     overflow: hidden;
+}
+/* OSB Buttons Deko */
+.osb {
+    position: absolute; width: 10px; height: 60%; background: #222; top: 20%;
+    display: flex; flex-direction: column; justify-content: space-around;
+}
+.osb-l { left: 0; }
+.osb-r { right: 0; }
+.osb::after { content: ''; width: 6px; height: 6px; background: #555; margin: 2px auto; box-shadow: 0 20px 0 #555, 0 40px 0 #555; }
+
+.monitor-screen {
+    width: 90%; height: 90%; margin: 5% auto;
+    background: var(--mfd-bg);
+    position: relative; overflow: hidden;
+}
+.crt-content {
+    padding: 15px; height: 100%;
+    color: var(--mfd-text);
+    text-shadow: 0 0 3px var(--mfd-text);
+    display: flex; flex-direction: column;
+}
+
+/* SCREEN INHALT STYLING */
+.screen-header {
+    border-bottom: 2px solid var(--mfd-text);
+    font-weight: bold; margin-bottom: 10px;
+}
+.mfd-btn {
+    background: transparent; border: 1px solid var(--mfd-text);
+    color: var(--mfd-text); font-family: var(--font-mono);
+    padding: 8px; width: 100%; text-align: left; margin-bottom: 5px;
+    cursor: pointer;
+}
+.mfd-btn:hover { background: rgba(0, 255, 65, 0.2); }
+
+/* Chart Anzeige Anpassung */
+.chart-container { 
+    flex-grow: 1; overflow: auto; display: flex; justify-content: center; 
+}
+.chart-container img { max-width: 100%; height: auto; border: 1px solid #444; }
+
+
+/* EDITOR SWITCH (Master Arm Style) */
+.item-switch {
+    right: 35%; bottom: 5%;
+    width: 80px; height: 80px;
+    background: #222; border-radius: 5px;
+    border: 2px solid #444;
+    display: flex; flex-direction: column; align-items: center;
+}
+.switch-housing {
+    width: 20px; height: 40px; background: #000; margin-top: 10px;
     position: relative;
 }
+.switch-lever {
+    width: 20px; height: 20px; background: #ccc;
+    position: absolute; top: 0; transition: top 0.2s;
+    border-radius: 2px;
+}
+.switch-label { color: #888; font-size: 0.6rem; margin-top: 5px; font-weight: bold; }
 
-.screen-overlay {
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 2px,
-        var(--crt-scanline) 3px
-    );
-    pointer-events: none;
-    position: absolute;
-    z-index: 999;
-    box-shadow: inset 0 0 50px rgba(0,0,0,0.7); /* Vignette */
-}
-
-.crt-screen-content {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    padding: 15px;
-    color: var(--crt-bright);
-    text-shadow: 0 0 2px var(--crt-bright);
-    overflow: hidden; /* Scrollbalken verstecken für Look */
-    font-size: 0.8rem;
-}
-
-/* --- TOP BAR IM MONITOR --- */
-.crt-top-bar {
-    display: flex;
-    align-items: center;
-    border-bottom: 2px dashed var(--crt-dim);
-    padding-bottom: 5px;
-    margin-bottom: 10px;
-}
-
-.crt-label { color: var(--crt-dim); margin-right: 5px; }
-.crt-value { font-weight: bold; }
-.crt-separator { margin: 0 10px; color: var(--crt-dim); }
-.system-status { margin-left: auto; }
-.blink { animation: blinker 2s linear infinite; }
-@keyframes blinker { 50% { opacity: 0; } }
-
-.crt-input {
-    background: var(--crt-bg);
-    border: 1px solid var(--crt-bright);
-    color: var(--crt-bright);
-    font-family: var(--font-mono);
-    padding: 2px;
-    font-size: 0.8rem;
-}
-.hidden { display: none !important; }
-
-/* --- HOTSPOTS (Positionierung auf den Objekten) --- */
-.desk-object {
-    position: absolute;
-    cursor: pointer;
-    /* ZUM TESTEN ROT - SPÄTER AUF 'transparent' SETZEN! */
-    background-color: rgba(255, 0, 0, 0.3); 
-    border: 1px dashed yellow;
-    z-index: 20;
-}
-.desk-object:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 10px rgba(255,255,255,0.2);
-}
-
-/* 1. THREATS (Mappe links) */
-.hotspot-threats {
-    bottom: 5%; left: 1%; width: 22%; height: 42%;
-    transform: rotate(-6deg);
-}
-
-/* 2. SITUATION (Karte Mitte unten) */
-.hotspot-situation {
-    bottom: 0%; left: 24%; width: 31%; height: 40%;
-}
-
-/* 3. MISSION (Klemmbrett rechts) */
-.hotspot-mission {
-    bottom: 3%; left: 56%; width: 19%; height: 46%;
-    transform: rotate(2deg);
-}
-
-/* 4. COMMS (Funkgerät rechts oben) */
-.hotspot-comms {
-    top: 38%; right: 4%; width: 20%; height: 26%;
-    transform: rotate(-2deg);
-}
-
-/* 5. EDITOR (Telefon rechts unten) */
-.hotspot-editor {
-    bottom: 0%; right: 0%; width: 14%; height: 35%;
-}
-
-
-/* --- FENSTER STIL (Im Monitor) --- */
-.window-frame.crt-window {
-    background-color: #001100;
-    border: 2px solid var(--crt-bright);
-    box-shadow: 5px 5px 0 rgba(0,20,0,0.8);
-    color: var(--crt-bright);
-    position: absolute;
-    width: 250px; height: 180px;
-}
-.window-header {
-    background-color: var(--crt-dim);
-    color: #000;
-    padding: 2px 5px;
-    font-weight: bold;
-    display: flex; justify-content: space-between;
-    cursor: move;
-}
-.win-close {
-    background: none; border: none; font-weight: bold; cursor: pointer; color: #000;
-}
-.window-tabs-bar {
-    display: flex; border-bottom: 1px solid var(--crt-bright); margin-bottom: 5px;
-}
-.tab {
-    padding: 2px 5px; border-right: 1px solid var(--crt-dim); cursor: pointer;
-    background: #002200; color: var(--crt-dim);
-}
-.tab.active {
-    background: var(--crt-bright); color: #000;
-}
-.window-content {
-    padding: 5px; overflow: auto; height: calc(100% - 50px);
-}
-.window-content[contenteditable="true"] {
-    outline: 1px dashed var(--crt-bright);
-}
+/* EDIT MODE STATE */
+.edit-mode-active .switch-lever { top: 20px; background: var(--warning); }
+.content-editable[contenteditable="true"] { outline: 1px dashed var(--warning); color: var(--warning); }
