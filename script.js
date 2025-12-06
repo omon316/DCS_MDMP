@@ -1,153 +1,103 @@
+// Globale Funktion muss VOR DOMContentLoaded definiert sein, 
+// damit sie vom HTML onclick="" gefunden wird.
+window.loadChartImage = function(imageUrl) {
+    const viewContainer = document.getElementById('screen-view-container');
+    const template = document.getElementById('template-chart-view');
+    
+    // View wechseln
+    viewContainer.innerHTML = "";
+    const content = template.content.cloneNode(true);
+    viewContainer.appendChild(content);
+
+    // Bild setzen
+    const imgElement = document.getElementById('chart-display-img');
+    imgElement.src = imageUrl;
+
+    // Back Button (geht hier zurück zur Liste, nicht Main)
+    const backBtn = viewContainer.querySelector('.btn-back');
+    backBtn.onclick = () => loadView('charts-menu');
+};
+
+// Interne Hilfsfunktion
+let loadView; 
+
 document.addEventListener('DOMContentLoaded', () => {
-    // --- KONFIGURATION ---
-    const mapArea = document.getElementById('map-area'); 
-    const template = document.getElementById('window-template');
-
-    // Selektiere alle Hotspots außer dem Editor-Switch
-    const contentHotspots = document.querySelectorAll('.desk-object:not(#editor-switch-container)');
-    const editorHotspot = document.getElementById('editor-switch-container');
-
-    // State
+    const viewContainer = document.getElementById('screen-view-container');
+    const deskItems = document.querySelectorAll('.desk-item[data-target]');
+    const editorSwitch = document.getElementById('editor-switch');
     let isEditorMode = false;
-    let windowOffset = 0;
-    const activeWindows = {};
 
-    // --- EDITOR MODE LOGIK ---
-    // Klick auf das Telefon (oder was auch immer der Editor Hotspot ist)
-    editorHotspot.addEventListener('click', () => {
+    // --- VIEW LOGIK ---
+    loadView = function(viewName) {
+        const templateId = 'template-' + viewName;
+        const template = document.getElementById(templateId);
+        
+        if(template) {
+            viewContainer.innerHTML = "";
+            const content = template.content.cloneNode(true);
+            viewContainer.appendChild(content);
+
+            // Back Button zu Main Menü
+            const backBtn = viewContainer.querySelector('.btn-back');
+            // Wenn wir im Chart-View sind, hat der Button schon einen Handler (siehe oben)
+            // Ansonsten Standard:
+            if(backBtn && !backBtn.onclick) backBtn.onclick = loadMainMenu;
+
+            applyEditorState();
+        }
+    };
+
+    function loadMainMenu() {
+        viewContainer.innerHTML = `
+            <div class="view-main">
+                <div class="falcon-logo" style="font-family:'Black Ops One'; font-size:1.5rem;">F-16C BLK 50</div>
+                <p>SYSTEM READY.</p>
+                <p>SELECT PAGE.</p>
+            </div>
+        `;
+    }
+
+    // --- EVENT LISTENER ---
+    deskItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const target = item.dataset.target;
+            loadView(target);
+            
+            // Animation
+            item.style.transform = "scale(0.98)";
+            setTimeout(() => { item.style.transform = ""; }, 100);
+        });
+    });
+
+    // --- EDITOR MODE ---
+    editorSwitch.addEventListener('click', () => {
         isEditorMode = !isEditorMode;
         
-        // Visuelles Feedback im Monitor (System Status oben rechts)
-        const statusEl = document.querySelector('.system-status');
-        if (statusEl) {
-            statusEl.textContent = isEditorMode ? "EDIT_MODE_ACTIVE" : "READY_";
-            statusEl.style.color = isEditorMode ? "orange" : "";
+        // Schalter Animation
+        editorSwitch.classList.toggle('edit-mode-active', isEditorMode);
+        
+        // System Status im Monitor
+        const modeIndicator = document.querySelector('.mode-indicator');
+        if(modeIndicator) {
+            modeIndicator.textContent = isEditorMode ? "EDIT_ARMED" : "NAV_MODE";
+            modeIndicator.style.color = isEditorMode ? "#ffb300" : "";
         }
 
-        // Eingabefelder umschalten
-        toggleDisplay('mission-name-display', 'mission-name-input');
-        toggleDisplay('takeoff-display', 'takeoff-inputs');
-
-        // Fenster Inhalte editierbar machen
-        document.querySelectorAll('.window-content').forEach(content => {
-            content.contentEditable = isEditorMode;
-        });
-        
-        // Plus-Buttons für Tabs zeigen
-        document.querySelectorAll('.add-tab-btn').forEach(btn => {
-            btn.classList.toggle('hidden', !isEditorMode);
-        });
-
-        console.log("Editor Mode:", isEditorMode); // Debug
+        applyEditorState();
     });
 
-    function toggleDisplay(displayId, inputId) {
-        const display = document.getElementById(displayId);
-        const input = document.getElementById(inputId);
-        if(!display || !input) return;
-
-        if (isEditorMode) {
-            display.classList.add('hidden');
-            input.classList.remove('hidden');
-            // Hier könnte man Werte kopieren
-            if(display.textContent !== "UNDEFINED" && display.textContent !== "--:--Z") {
-                // Logik zum Wert übernehmen könnte hier rein
-            }
-        } else {
-            display.classList.remove('hidden');
-            input.classList.add('hidden');
-            // Wert zurückschreiben bei Deaktivierung
-            if(input.value) display.textContent = input.value;
-        }
-    }
-
-    // --- FENSTER ÖFFNEN LOGIK ---
-    contentHotspots.forEach(hotspot => {
-        hotspot.addEventListener('click', () => {
-            const targetName = hotspot.getAttribute('data-target');
-            
-            // Wenn Fenster schon offen, schließen
-            if (activeWindows[targetName]) {
-                closeWindow(targetName);
-                return;
-            }
-            
-            openWindow(targetName);
+    function applyEditorState() {
+        const editables = document.querySelectorAll('.content-editable');
+        editables.forEach(el => {
+            el.contentEditable = isEditorMode;
         });
-    });
-
-    function openWindow(name) {
-        const clone = template.content.cloneNode(true);
-        const winFrame = clone.querySelector('.window-frame');
-        const title = clone.querySelector('.window-title');
-        const closeBtn = clone.querySelector('.win-close');
-        const content = clone.querySelector('.window-content');
-        const addTabBtn = clone.querySelector('.add-tab-btn');
-
-        title.textContent = name.toUpperCase();
-        
-        // Positionierung im Monitor (versetzt)
-        winFrame.style.left = (10 + windowOffset) + 'px';
-        winFrame.style.top = (10 + windowOffset) + 'px';
-        winFrame.style.zIndex = 100 + windowOffset;
-        
-        content.contentEditable = isEditorMode;
-        if (!isEditorMode) addTabBtn.classList.add('hidden');
-
-        // Offset erhöhen
-        windowOffset += 20;
-        if (windowOffset > 100) windowOffset = 0;
-
-        // Schließen Funktion
-        closeBtn.onclick = () => closeWindow(name);
-        
-        // Nach vorne holen bei Klick
-        winFrame.addEventListener('mousedown', () => {
-            // Einfacher Z-Index Hack
-            winFrame.style.zIndex = 999; 
-        });
-
-        makeDraggable(winFrame);
-        mapArea.appendChild(winFrame);
-        activeWindows[name] = { element: winFrame };
     }
 
-    function closeWindow(name) {
-        if (!activeWindows[name]) return;
-        activeWindows[name].element.remove();
-        delete activeWindows[name];
-    }
-
-    // --- DRAG FUNKTION (Verschieben der Fenster) ---
-    function makeDraggable(element) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        const header = element.querySelector('.window-header');
-        
-        if (header) {
-            header.onmousedown = dragMouseDown;
-        }
-
-        function dragMouseDown(e) {
-            e.preventDefault();
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
-        }
-
-        function elementDrag(e) {
-            e.preventDefault();
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            element.style.top = (element.offsetTop - pos2) + "px";
-            element.style.left = (element.offsetLeft - pos1) + "px";
-        }
-
-        function closeDragElement() {
-            document.onmouseup = null;
-            document.onmousemove = null;
-        }
-    }
+    // Uhrzeit
+    setInterval(() => {
+        const now = new Date();
+        const timeString = now.toISOString().split('T')[1].split('.')[0] + 'Z';
+        const clock = document.getElementById('clock');
+        if(clock) clock.textContent = timeString;
+    }, 1000);
 });
